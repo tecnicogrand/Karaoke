@@ -89,8 +89,8 @@
         <div class="space-y-4">
             <div>
                 <label class="block text-sm text-gray-400 mb-1">API Key Gemini</label>
-                <!-- CAMPO VACÍO PARA INGRESO MANUAL -->
-                <input type="password" id="api-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" placeholder="Pega aquí tu API Key (Ej: AIzaSy...)">
+                <!-- CAMPO PARA INGRESO MANUAL, AHORA SOPORTA CLAVES AQ. -->
+                <input type="password" id="api-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" placeholder="Pega aquí tu API Key (Ej: AQ... o AIza...)">
             </div>
             <div>
                 <label class="block text-sm text-gray-400 mb-1">Link del Video de YouTube</label>
@@ -175,13 +175,19 @@
         }
 
         async function fetchLyricsFromGemini(title, apiKey) {
-            const prompt = `Devuelve la letra de "${title}" en formato LRC puro (ejemplo: [00:15.22] Línea de la canción). No incluyas markdown, introducciones ni comentarios. Solo texto LRC.`;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const prompt = `Devuelve la letra de "${title}" en formato LRC puro (ejemplo: [00:15.22] Línea de la canción). No incluyas markdown, introducciones ni comentarios. Solo texto LRC. Tu respuesta debe estar dentro de un campo 'text' en formato JSON.`;
+            // USE gemini-2.5-flash for compatibility with AQ keys
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                body: JSON.stringify({ 
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                })
             });
 
             if (!response.ok) {
@@ -190,8 +196,18 @@
             }
             
             const data = await response.json();
-            let rawText = data.candidates[0].content.parts[0].text;
-            return rawText.replace(/```lrc/g, '').replace(/```/g, '').trim();
+            
+            // Extract from JSON response
+            let rawText = "";
+            try {
+               const responseObj = JSON.parse(data.candidates[0].content.parts[0].text);
+               rawText = responseObj.text || JSON.stringify(responseObj);
+            } catch (e) {
+               // Fallback if the AI didn't follow the JSON instruction perfectly
+               rawText = data.candidates[0].content.parts[0].text;
+            }
+            
+            return rawText.replace(/```lrc/g, '').replace(/```json/g, '').replace(/```/g, '').trim();
         }
 
         function parseLRC(lrcText) {
@@ -204,7 +220,11 @@
                 if (match) {
                     const timeInSeconds = (parseInt(match[1]) * 60) + parseFloat(match[2]);
                     const text = match[3].trim();
-                    if (text !== "") result.push({ time: timeInSeconds, text: text });
+                    
+                    // Ignore JSON syntax if the AI returned it inside the LRC
+                    if (text !== "" && !text.includes('"text":') && text !== '{' && text !== '}') {
+                         result.push({ time: timeInSeconds, text: text.replace(/["]/g, '') });
+                    }
                 }
             });
             return result.sort((a, b) => a.time - b.time);
