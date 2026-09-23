@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karaoke Autónomo IA - Funcional</title>
+    <title>Karaoke Autónomo IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -84,12 +84,13 @@
 
     <!-- PANTALLA DE INICIO -->
     <div id="setup-screen" class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg z-10">
-        <h1 class="text-3xl font-black mb-6 text-center text-blue-400"><i class="fas fa-music"></i> Karaoke Pro IA</h1>
+        <h1 class="text-3xl font-black mb-6 text-center text-blue-400"><i class="fas fa-microphone-alt"></i> Karaoke Pro IA</h1>
         
         <div class="space-y-4">
             <div>
                 <label class="block text-sm text-gray-400 mb-1">API Key Gemini</label>
-                <input type="password" id="api-key" value="AQ.Ab8RN6KaQ0o7LfNAS2ET6S_arMYRi2iU5Fc5KAQ9oLk4jpTSPw" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" placeholder="Tu API Key">
+                <!-- CAMPO VACÍO PARA INGRESO MANUAL -->
+                <input type="password" id="api-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" placeholder="Pega aquí tu API Key (Ej: AIzaSy...)">
             </div>
             <div>
                 <label class="block text-sm text-gray-400 mb-1">Link del Video de YouTube</label>
@@ -124,7 +125,7 @@
             <div id="next-lyric" class="lyric-line lyric-next">...</div>
         </div>
 
-        <!-- CONTROLES -->
+        <!-- CONTROLES DE TIEMPO -->
         <div id="controls-panel" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/70 backdrop-blur-md rounded-xl p-4 flex gap-4 idle-show z-10 border border-white/20">
             <button id="btn-sync-m5" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-bold transition">-5s</button>
             <button id="btn-sync-m" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-bold transition">-0.5s</button>
@@ -138,7 +139,6 @@
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         let lrcData = [];
@@ -185,7 +185,8 @@
             });
 
             if (!response.ok) {
-                throw new Error("API_ERROR");
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Error de Google AI: ${errorData.error?.message || 'Revisa tu clave API'}`);
             }
             
             const data = await response.json();
@@ -209,34 +210,18 @@
             return result.sort((a, b) => a.time - b.time);
         }
 
-        // --- SISTEMA DE EMERGENCIA (FALLBACK) ---
-        function loadFallbackKaraoke() {
-            alert("Tu clave de Google falló (Probablemente por restricciones OAuth), pero hemos cargado una pista de prueba para que la app siga funcionando.");
-            // Video instrumental de prueba
-            videoId = "x6hFim_R_fQ"; 
-            // Letra fija (Cielito Lindo)
-            const fallbackLRC = `
-[00:19.00]De la Sierra Morena
-[00:22.50]Cielito lindo, vienen bajando
-[00:27.50]Un par de ojitos negros
-[00:30.00]Cielito lindo, de contrabando
-[00:36.00]Ay, ay, ay, ay
-[00:41.00]Canta y no llores
-[00:45.00]Porque cantando se alegran
-[00:48.00]Cielito lindo, los corazones
-            `;
-            lrcData = parseLRC(fallbackLRC);
-            setupYouTubePlayer();
-        }
-
         document.getElementById('btn-fetch').addEventListener('click', async () => {
             const apiKey = document.getElementById('api-key').value.trim();
             const url = document.getElementById('youtube-url').value.trim();
 
-            if (!apiKey || !url) return alert("Por favor, llena los campos.");
+            if (!apiKey || !url) {
+                return alert("Por favor, ingresa tu API Key y el link de YouTube.");
+            }
             
             videoId = extractVideoId(url);
-            if (!videoId) return alert("Enlace de YouTube no válido.");
+            if (!videoId) {
+                return alert("Enlace de YouTube no válido.");
+            }
 
             setupScreen.classList.add('hidden');
             loadingScreen.classList.remove('hidden');
@@ -250,15 +235,19 @@
                 const rawLRC = await fetchLyricsFromGemini(videoTitle, apiKey);
                 
                 lrcData = parseLRC(rawLRC);
-                if (lrcData.length === 0) throw new Error("FORMAT_ERROR");
+                if (lrcData.length === 0) {
+                    throw new Error("La IA no pudo devolver el formato de tiempo LRC correctamente.");
+                }
 
                 loadingText.innerText = "Cargando escenario...";
                 setupYouTubePlayer();
 
             } catch (error) {
-                // Si la API falla por cualquier motivo, cargamos la canción de emergencia
-                console.error("Fallo detectado:", error);
-                loadFallbackKaraoke();
+                alert(`Conexión fallida: ${error.message}`);
+                // Regresar a la pantalla de inicio si hay error
+                loadingScreen.classList.add('hidden');
+                loadingScreen.classList.remove('flex');
+                setupScreen.classList.remove('hidden');
             }
         });
 
@@ -343,7 +332,7 @@
             }
         });
 
-        // Reconocimiento pasivo de voz para que brille si cantas bien
+        // Reconocimiento pasivo de voz para que brille en verde
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
