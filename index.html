@@ -178,7 +178,6 @@
 
         async function fetchVideoTitle(vidId) {
             try {
-                // Usamos noembed para obtener datos públicos del video
                 const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vidId}`);
                 const data = await response.json();
                 return data.title || "Canción Desconocida";
@@ -188,7 +187,6 @@
         }
 
         async function fetchLyricsFromGemini(title, apiKey) {
-            // PROMPT MEJORADO Y ESTRICTO PARA EVITAR ERRORES
             const prompt = `Actúa como una base de datos experta en letras de canciones. Tu objetivo es proporcionar la letra EXACTA y ORIGINAL de la canción que corresponde al título de YouTube: "${title}". 
             REGLAS ESTRICTAS:
             1. Proporciona la letra en formato LRC puro (ejemplo: [00:15.22] Línea de la canción).
@@ -196,7 +194,7 @@
             3. Estima los tiempos LRC lo más precisos posibles basándote en la versión de estudio original.
             4. NO incluyas introducciones, comentarios, avisos ni formato markdown (\`\`\`). SOLO devuelve el texto LRC puro.`;
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -206,11 +204,16 @@
                 })
             });
 
-            if (!response.ok) throw new Error("Fallo en la API de Gemini. Revisa tu clave.");
+            // AQUÍ EVALUAMOS EL ERROR REAL
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Detalle de Google:", errorData);
+                throw new Error(`Error de Google AI: ${errorData.error.message}`);
+            }
+            
             const data = await response.json();
             
             let rawText = data.candidates[0].content.parts[0].text;
-            // Limpiar posibles etiquetas markdown que la IA a veces pone
             rawText = rawText.replace(/```lrc/g, '').replace(/```/g, '').trim();
             return rawText;
         }
@@ -218,7 +221,6 @@
         function parseLRC(lrcText) {
             const lines = lrcText.split('\n');
             const result = [];
-            // Regex para atrapar [mm:ss.xx] o [mm:ss]
             const regex = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\](.*)/;
             
             lines.forEach(line => {
@@ -234,7 +236,6 @@
                     }
                 }
             });
-            // Ordenar por tiempo por si acaso
             return result.sort((a, b) => a.time - b.time);
         }
 
@@ -249,7 +250,6 @@
             videoId = extractVideoId(url);
             if (!videoId) return alert("Enlace de YouTube no válido.");
 
-            // Mostrar carga
             setupScreen.classList.add('hidden');
             loadingScreen.classList.remove('hidden');
             loadingScreen.classList.add('flex');
@@ -262,14 +262,13 @@
                 const rawLRC = await fetchLyricsFromGemini(videoTitle, apiKey);
                 
                 lrcData = parseLRC(rawLRC);
-                if (lrcData.length === 0) throw new Error("No se pudo extraer el formato LRC.");
+                if (lrcData.length === 0) throw new Error("La IA no pudo devolver el formato LRC. Intenta con otra canción.");
 
-                // Preparar YouTube
                 loadingText.innerText = "Preparando escenario...";
                 setupYouTubePlayer();
 
             } catch (error) {
-                alert("Error: " + error.message);
+                alert(error.message); // Aquí te mostrará si hay problema de facturación, permisos, etc.
                 loadingScreen.classList.add('hidden');
                 loadingScreen.classList.remove('flex');
                 setupScreen.classList.remove('hidden');
@@ -279,7 +278,6 @@
         // --- 3. REPRODUCTOR Y SINCRONIZACIÓN ---
 
         function setupYouTubePlayer() {
-            // Eliminar reproductor anterior si existe
             document.getElementById('youtube-player-container').innerHTML = '<div id="yt-player"></div>';
             
             player = new YT.Player('yt-player', {
@@ -305,7 +303,6 @@
             loadingScreen.classList.remove('flex');
             karaokeScreen.classList.remove('hidden');
             
-            // Reiniciar estado
             syncOffset = 0;
             updateSyncDisplay();
             currentLineIndex = -1;
@@ -313,20 +310,17 @@
             nextLyricEl.innerText = "Presiona iniciar...";
         }
 
-        // Botón grande de inicio
         document.getElementById('btn-start-karaoke').addEventListener('click', () => {
             startOverlay.classList.add('hidden');
             player.playVideo();
-            initMicForScoring(); // Iniciar micrófono opcional
-            syncLoop(); // Iniciar bucle de tiempo
+            initMicForScoring(); 
+            syncLoop(); 
         });
 
         function syncLoop() {
             if (player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) {
-                // Obtener tiempo del video y aplicar el offset de calibración del usuario
                 const currentTime = player.getCurrentTime() + syncOffset;
                 
-                // Encontrar qué línea debería estar sonando ahora
                 let newIndex = -1;
                 for (let i = 0; i < lrcData.length; i++) {
                     if (currentTime >= lrcData[i].time) {
@@ -339,7 +333,7 @@
                 if (newIndex !== currentLineIndex && newIndex >= 0) {
                     currentLineIndex = newIndex;
                     currentLyricEl.innerText = lrcData[currentLineIndex].text;
-                    currentLyricEl.classList.remove('lyric-success'); // Quitar color verde al cambiar
+                    currentLyricEl.classList.remove('lyric-success');
                     
                     if (lrcData[currentLineIndex + 1]) {
                         nextLyricEl.innerText = lrcData[currentLineIndex + 1].text;
@@ -385,12 +379,11 @@
         });
 
         // --- 6. RECONOCIMIENTO DE VOZ PASIVO (EFECTO VISUAL) ---
-        // Esto solo pinta de verde la frase si detecta que la estás cantando
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
         function initMicForScoring() {
-            if (!SpeechRecognition) return; // Si el navegador no lo soporta, no pasa nada
+            if (!SpeechRecognition) return; 
             
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
@@ -410,14 +403,12 @@
                 const said = normalize(transcript);
                 const target = normalize(lrcData[currentLineIndex].text);
 
-                // Si al menos 40% de la linea está en lo que dijiste, brilla en verde
                 if (said.includes(target.substring(0, target.length / 2)) && target.length > 3) {
                     currentLyricEl.classList.add('lyric-success');
                 }
             };
 
             recognition.onend = () => {
-                // Reiniciar si se detiene para seguir escuchando
                 if (!karaokeScreen.classList.contains('hidden')) {
                     try { recognition.start(); } catch(e){}
                 }
