@@ -88,7 +88,7 @@
         <div class="space-y-4">
             <div>
                 <label class="block text-sm text-gray-400 mb-1">API Key Gemini (Formato AQ)</label>
-                <!-- CLAVE ACTUALIZADA -->
+                <!-- CLAVE ACTUALIZADA EN EL CAMPO -->
                 <input type="password" id="api-key" value="AQ.Ab8RN6KaQ0o7LfNAS2ET6S_arMYRi2iU5Fc5KAQ9oLk4jpTSPw" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" placeholder="Tu API Key de Google Studio">
             </div>
             <div>
@@ -178,14 +178,13 @@
             3. Estima los tiempos LRC lo más precisos posibles basándote en la versión de estudio original.
             4. NO incluyas introducciones, comentarios, avisos ni formato markdown (\`\`\`). SOLO devuelve el texto LRC puro.`;
 
-            // SE ACTUALIZA AL MODELO 2.5-flash Y SE USA HEADER x-goog-api-key
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
+            // SOLUCIÓN: Pasamos el API Key directamente en la URL con el modelo 1.5-flash
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': apiKey
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }]
