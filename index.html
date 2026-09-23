@@ -3,376 +3,499 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karaoke Inmersivo - YouTube Background</title>
+    <title>Karaoke AI - Edición TV</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         
         body {
-            font-family: 'Fredoka', sans-serif;
-            background-color: #000;
-            overflow: hidden; /* Evitar scroll */
+            font-family: 'Montserrat', sans-serif;
+            background-color: #050505;
+            overflow: hidden; 
         }
 
-        /* Utilidades para los textos brillantes */
-        .glow-text {
-            text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 30px rgba(255,255,255,0.3);
-        }
-        
-        .correct-glow {
-            animation: flashGreen 0.6s ease-out;
+        /* Estilos de letras para TV (Muy legibles) */
+        .lyric-text {
+            text-shadow: 0px 4px 20px rgba(0, 0, 0, 0.9), 0px 0px 10px rgba(0,0,0,0.8);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        @keyframes flashGreen {
-            0% { text-shadow: 0 0 20px rgba(34, 197, 94, 1), 0 0 40px rgba(34, 197, 94, 0.8); color: #4ade80; }
-            100% { text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 30px rgba(255,255,255,0.3); color: white; }
-        }
-        
-        .lyric-transition {
-            transition: all 0.3s ease-in-out;
+        .active-lyric {
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.3), 0px 4px 10px rgba(0,0,0,0.9);
+            transform: scale(1.05);
         }
 
+        .past-lyric {
+            color: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .future-lyric {
+            color: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        /* Animación cuando el usuario canta bien */
+        .voice-match-glow {
+            animation: tvCorrectGlow 0.5s forwards;
+        }
+
+        @keyframes tvCorrectGlow {
+            0% { 
+                color: #ffffff; 
+                text-shadow: 0 0 15px rgba(255,255,255,0.6); 
+            }
+            100% { 
+                color: #4ade80; 
+                text-shadow: 0 0 20px rgba(74, 222, 128, 1), 0 0 50px rgba(74, 222, 128, 0.8), 0 0 80px rgba(74, 222, 128, 0.5); 
+                transform: scale(1.1);
+            }
+        }
+
+        /* Fondos y contenedores */
         .glass-panel {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(10, 10, 10, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
         }
 
-        /* Contenedor de YouTube para que actúe de fondo */
         .yt-background {
             position: fixed;
             top: 50%;
             left: 50%;
-            width: 100vw;
-            height: 100vh;
-            transform: translate(-50%, -50%) scale(1.2); /* Escalar para quitar bordes negros */
+            width: 110vw;
+            height: 110vh;
+            transform: translate(-50%, -50%);
             z-index: -20;
-            pointer-events: none; /* Que no se pueda clickear */
+            pointer-events: none;
+            filter: brightness(0.4) saturate(1.2); /* Oscurecido para contraste */
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* Controles inferiores que desaparecen por inactividad */
+        .controls-overlay {
+            transition: opacity 0.5s ease;
+        }
+        .controls-overlay.idle {
+            opacity: 0;
         }
     </style>
 </head>
-<body class="text-white h-screen flex flex-col items-center justify-center relative">
+<body class="text-white h-screen w-screen flex flex-col relative">
 
-    <!-- Contenedor del video de YouTube -->
-    <div id="player" class="yt-background"></div>
-    
-    <!-- Capa oscura semitransparente -->
-    <div class="fixed inset-0 bg-black/60 z-[-10]"></div>
+    <div id="player" class="yt-background opacity-0 transition-opacity duration-1000"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 z-[-10]"></div>
 
-    <main class="z-10 flex flex-col items-center w-full max-w-4xl px-4 text-center h-full py-8 justify-between">
-        
-        <!-- Cabecera: Título y Puntuación -->
-        <header class="w-full flex flex-col items-center mt-4">
-            <div class="flex justify-between items-center w-full max-w-3xl mb-4 px-4">
-                <h1 class="text-3xl text-pink-400 font-bold tracking-widest uppercase drop-shadow-lg">🎤 Cielito Lindo</h1>
-                <div class="glass-panel px-6 py-2 rounded-full flex items-center gap-3 shadow-lg">
-                    <span class="text-gray-300 text-sm uppercase tracking-wider font-semibold">Score</span>
-                    <span id="score-display" class="text-4xl font-bold text-yellow-400 drop-shadow-md transition-all duration-300">0</span>
-                </div>
+    <!-- PANTALLA DE CONFIGURACIÓN -->
+    <section id="setup-screen" class="absolute inset-0 z-10 flex flex-col items-center justify-center p-6">
+        <div class="glass-panel w-full max-w-xl p-10 rounded-[2rem] flex flex-col gap-6 items-center">
+            <h1 class="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 drop-shadow-xl text-center mb-2">
+                TV KTV AUTÓNOMO
+            </h1>
+            
+            <div class="w-full">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-2">Enlace del Karaoke (YouTube)</label>
+                <input type="text" id="yt-url" placeholder="Pegar URL de YouTube..." class="w-full bg-black/50 border border-gray-600 text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-lg transition-colors">
+            </div>
+
+            <div class="w-full">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-2">Gemini API Key (Requerida para LRC)</label>
+                <input type="password" id="api-key" placeholder="AI Studio Key..." class="w-full bg-black/50 border border-gray-600 text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-indigo-500 text-lg transition-colors">
+            </div>
+
+            <button id="prepare-btn" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-black text-xl tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+                Procesar Canción
+            </button>
+
+            <div id="loading-state" class="hidden flex-col items-center gap-4 mt-4 w-full">
+                <div class="spinner"></div>
+                <span id="loading-text" class="text-lg text-blue-300 font-bold animate-pulse text-center w-full">Extrayendo información...</span>
             </div>
             
-            <!-- Barra de Progreso -->
-            <div class="w-full max-w-3xl bg-gray-900/80 h-3 rounded-full overflow-hidden border border-gray-700 shadow-inner mt-2">
-                <div id="progress-bar" class="bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 h-full w-0 transition-all duration-500 ease-out"></div>
-            </div>
+            <div id="error-msg" class="hidden w-full bg-red-900/60 text-red-200 p-4 rounded-xl text-center border border-red-500/50"></div>
+        </div>
+    </section>
+
+    <!-- PANTALLA DEL KARAOKE -->
+    <main id="karaoke-screen" class="hidden absolute inset-0 z-10 flex flex-col justify-between p-8">
+        
+        <!-- Header / Título -->
+        <header class="w-full text-center mt-4">
+            <h2 id="song-title" class="text-3xl md:text-4xl font-black text-white/80 uppercase tracking-widest drop-shadow-xl">Cargando...</h2>
         </header>
 
-        <div class="w-full max-w-4xl flex flex-col justify-center items-center flex-1 my-8">
-            <div id="lyric-container" class="glass-panel rounded-3xl p-8 md:p-14 shadow-[0_0_40px_rgba(0,0,0,0.5)] w-full relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
-                
-                <div id="status-indicator" class="absolute top-4 right-6 flex items-center gap-2 hidden">
-                    <span class="relative flex h-3 w-3">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                    </span>
-                    <span class="text-xs text-red-400 font-bold uppercase tracking-wider">Escuchando</span>
-                </div>
-
-                <h2 id="current-line" class="text-5xl md:text-7xl font-bold glow-text lyric-transition mb-8 text-white leading-tight">
-                    Cargando Video...
-                </h2>
-                <h3 id="next-line" class="text-2xl md:text-4xl font-medium text-gray-400 lyric-transition opacity-80">
-                    Por favor espera
-                </h3>
-            </div>
+        <!-- Zona de Letras -->
+        <div id="lyrics-display" class="flex-1 flex flex-col justify-center items-center gap-8 md:gap-12 w-full max-w-6xl mx-auto text-center px-4">
+            <h3 id="prev-line" class="text-3xl md:text-5xl font-bold lyric-text past-lyric line-clamp-2"></h3>
+            <h1 id="current-line" class="text-5xl md:text-7xl lg:text-8xl font-black lyric-text active-lyric leading-tight w-full drop-shadow-2xl">
+                Preparando el escenario...
+            </h1>
+            <h3 id="next-line" class="text-3xl md:text-5xl font-bold lyric-text future-lyric line-clamp-2"></h3>
         </div>
 
-        <div class="w-full max-w-3xl flex flex-col items-center mb-8 gap-6">
+        <!-- Controles Inferiores (Sincronización y Start) -->
+        <footer id="controls-footer" class="controls-overlay w-full flex flex-col items-center gap-6 pb-6">
             
-            <!-- Transcripción en vivo -->
-            <div class="w-full glass-panel rounded-2xl p-5 border border-white/10 relative">
-                <div class="absolute -top-3 left-6 bg-gray-800 px-3 text-xs text-pink-400 uppercase tracking-widest font-semibold border border-pink-500/30 rounded-full">
-                    Micrófono en vivo
+            <!-- Botón Inicial -->
+            <button id="start-playback-btn" class="px-12 py-5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full font-black text-2xl uppercase tracking-widest shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:scale-105 transition-all">
+                Iniciar Karaoke
+            </button>
+
+            <!-- Panel de Sincronización e Información del Micro -->
+            <div id="sync-panel" class="hidden glass-panel rounded-full px-6 py-3 flex items-center justify-between gap-6 w-full max-w-4xl">
+                
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-4 w-4">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                    </span>
+                    <span class="text-xs uppercase tracking-widest font-bold text-gray-400">Mic Activo</span>
                 </div>
-                <p id="live-transcript" class="text-xl md:text-2xl font-medium text-gray-300 min-h-[40px] italic">
-                    Esperando a que inicies...
-                </p>
+
+                <div class="flex items-center gap-2 bg-black/50 rounded-full p-1 border border-gray-700">
+                    <span class="text-[10px] uppercase font-bold text-gray-400 px-3">Sync Offset</span>
+                    <button class="offset-btn hover:bg-gray-700 bg-gray-800 px-4 py-2 rounded-full font-bold text-sm transition" data-val="-5">-5s</button>
+                    <button class="offset-btn hover:bg-gray-700 bg-gray-800 px-4 py-2 rounded-full font-bold text-sm transition" data-val="-0.5">-0.5s</button>
+                    <div id="offset-display" class="px-4 font-mono font-bold text-blue-400 min-w-[70px] text-center">0.0s</div>
+                    <button class="offset-btn hover:bg-gray-700 bg-gray-800 px-4 py-2 rounded-full font-bold text-sm transition" data-val="0.5">+0.5s</button>
+                    <button class="offset-btn hover:bg-gray-700 bg-gray-800 px-4 py-2 rounded-full font-bold text-sm transition" data-val="5">+5s</button>
+                </div>
             </div>
-
-            <!-- Controles -->
-            <div class="flex gap-4">
-                <button id="start-btn" disabled class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full font-bold text-xl shadow-[0_0_15px_rgba(16,185,129,0.5)] hover:scale-105 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    ▶️ Empezar
-                </button>
-                <button id="stop-btn" class="px-8 py-3 bg-gradient-to-r from-red-600 to-rose-700 rounded-full font-bold text-xl shadow-[0_0_15px_rgba(225,29,72,0.5)] hover:scale-105 transition-all duration-300 flex items-center gap-2 hidden">
-                    ⏹️ Detener
-                </button>
-            </div>
-
-            <div id="error-container" class="hidden bg-red-900/80 border border-red-500 text-red-200 px-6 py-3 rounded-xl max-w-lg text-sm text-center"></div>
-        </div>
-
+            
+            <p class="text-gray-500 text-sm">El tiempo del video controla la letra automáticamente. Si cantas bien, la letra brillará.</p>
+        </footer>
     </main>
 
     <script>
-        // --- VARIABLES DE ESTADO ---
-        let player;
+        // Variables de Estado
+        let player = null;
         let isYouTubeReady = false;
-        let isRecording = false;
-        let currentIndex = 0;
-        let score = 0;
-        let speechBuffer = "";
+        let videoId = "";
+        
+        let lrcData = []; 
+        // Formato: [ { time: 12.5, text: "hola" }, ... ]
+        
+        let currentLyricIndex = -1;
+        let syncOffset = 0.0; // Segundos a sumar/restar al tiempo del video
+        let animationFrameId = null;
+        let isPlaying = false;
+
+        // Variables de Micrófono (Solo para validación visual)
         let recognition = null;
+        let isRecording = false;
+        let speechBuffer = "";
 
-        // La letra
-        const lyrics = [
-            "De la sierra morena",
-            "Cielito lindo vienen bajando",
-            "Un par de ojitos negros",
-            "Cielito lindo de contrabando",
-            "Ay ay ay ay",
-            "Canta y no llores",
-            "Porque cantando se alegran",
-            "Cielito lindo los corazones"
-        ];
+        // Elementos DOM
+        const ui = {
+            setup: document.getElementById('setup-screen'),
+            urlIn: document.getElementById('yt-url'),
+            keyIn: document.getElementById('api-key'),
+            prepBtn: document.getElementById('prepare-btn'),
+            loadState: document.getElementById('loading-state'),
+            loadText: document.getElementById('loading-text'),
+            errOut: document.getElementById('error-msg'),
+            
+            karaoke: document.getElementById('karaoke-screen'),
+            title: document.getElementById('song-title'),
+            prevLine: document.getElementById('prev-line'),
+            curLine: document.getElementById('current-line'),
+            nextLine: document.getElementById('next-line'),
+            startBtn: document.getElementById('start-playback-btn'),
+            syncPanel: document.getElementById('sync-panel'),
+            offsetDisp: document.getElementById('offset-display'),
+            footer: document.getElementById('controls-footer')
+        };
 
-        // Elementos UI
-        const currentLineEl = document.getElementById('current-line');
-        const nextLineEl = document.getElementById('next-line');
-        const liveTranscriptEl = document.getElementById('live-transcript');
-        const scoreDisplay = document.getElementById('score-display');
-        const progressBar = document.getElementById('progress-bar');
-        const statusIndicator = document.getElementById('status-indicator');
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const errorContainer = document.getElementById('error-container');
-
-        // --- 1. CONFIGURACIÓN YOUTUBE API ---
-        // Cargar script dinámicamente como lo pide Google
+        // Cargar API de YouTube
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // Función global llamada por la API de YT cuando está lista
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                videoId: 'IixcM20oJq8', // Video instrumental
-                playerVars: {
-                    'autoplay': 0,
-                    'controls': 0, // Sin controles
-                    'disablekb': 1,
-                    'fs': 0,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'showinfo': 0,
-                    'mute': 0 
-                },
-                events: {
-                    'onReady': onPlayerReady
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
+        window.onYouTubeIframeAPIReady = function() {
             isYouTubeReady = true;
-            currentLineEl.textContent = "¡Listo para cantar!";
-            nextLineEl.textContent = "Presiona 'Empezar'";
-            startBtn.disabled = false; // Habilitar botón
+        };
+
+        // Helper: Extraer ID de YouTube
+        function extractVideoID(url) {
+            const match = url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            return (match && match[1].length === 11) ? match[1] : null;
         }
 
-        // --- STREAMING_CHUNK:Configuración Web Speech API... ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                showError("Tu navegador no soporta reconocimiento de voz. Usa Chrome de escritorio.");
+        // Helper: Limpiar texto para comparar (Acentos, puntuación)
+        const normalizeText = (text) => {
+            return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?¡!"']/g,"").replace(/\s{2,}/g," ").trim();
+        };
+
+        async function fetchLRC(videoTitle, apiKey) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const prompt = `Actúa como un generador de archivos LRC profesionales. Crea la letra sincronizada en formato LRC estricto para la canción original de estudio correspondiente al título: '${videoTitle}'. 
+Reglas estrictas:
+1. Usa el formato de tiempo [mm:ss.xx]Texto. 
+2. No incluyas metadatos (como [ar:], [ti:]). 
+3. Genera la canción completa. 
+4. NO uses bloques de código markdown, NO expliques nada, responde ÚNICAMENTE con las líneas LRC.`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.1 }
+                    })
+                });
+                const result = await response.json();
+                if(result.candidates && result.candidates.length > 0) {
+                    let text = result.candidates[0].content.parts[0].text;
+                    // Remover bloques markdown si la IA no hizo caso
+                    text = text.replace(/```[a-z]*\n/gi, '').replace(/```/g, '');
+                    return parseLRC(text);
+                }
+                throw new Error("Respuesta vacía de IA");
+            } catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+
+        function parseLRC(lrcString) {
+            const lines = lrcString.split('\n');
+            const data = [];
+            // Regex para [mm:ss.xx] o [mm:ss.x] o [mm:ss]
+            const regex = /\[(\d{2,}):(\d{2}(?:\.\d{1,3})?)\](.*)/;
+            
+            for (let line of lines) {
+                const match = line.match(regex);
+                if (match) {
+                    const minutes = parseInt(match[1], 10);
+                    const seconds = parseFloat(match[2]);
+                    const text = match[3].trim();
+                    if (text) {
+                        data.push({
+                            time: (minutes * 60) + seconds,
+                            text: text
+                        });
+                    }
+                }
+            }
+            return data.sort((a, b) => a.time - b.time);
+        }
+
+        // Recuperar key
+        if (localStorage.getItem('ktvGeminiKey')) {
+            ui.keyIn.value = localStorage.getItem('ktvGeminiKey');
+        }
+
+        ui.prepBtn.addEventListener('click', async () => {
+            const url = ui.urlIn.value.trim();
+            const key = ui.keyIn.value.trim();
+            ui.errOut.classList.add('hidden');
+
+            if (!url || !key) {
+                ui.errOut.textContent = "Ambos campos son obligatorios.";
+                ui.errOut.classList.remove('hidden');
                 return;
             }
 
-            recognition = new SpeechRecognition();
-            recognition.lang = 'es-ES'; 
-            recognition.continuous = true; 
-            recognition.interimResults = true; 
+            videoId = extractVideoID(url);
+            if (!videoId || !isYouTubeReady) {
+                ui.errOut.textContent = "URL inválida o YouTube no está listo.";
+                ui.errOut.classList.remove('hidden');
+                return;
+            }
 
-            // Normalizador de texto (ignora acentos y puntuación)
-            const normalizeText = (text) => {
-                return text.toLowerCase()
-                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?¡!]/g,"")
-                    .replace(/\s{2,}/g," ")
-                    .trim();
-            };
+            localStorage.setItem('ktvGeminiKey', key);
+            ui.prepBtn.classList.add('hidden');
+            ui.loadState.classList.remove('hidden');
+            ui.loadState.classList.add('flex');
 
-            // Lógica de avance
-            const advanceLine = () => {
-                // Efecto visual
-                currentLineEl.classList.remove('correct-glow');
-                void currentLineEl.offsetWidth; 
-                currentLineEl.classList.add('correct-glow');
-                
-                score += 150;
-                scoreDisplay.textContent = score;
-                scoreDisplay.classList.add('scale-150', 'text-white');
-                setTimeout(() => scoreDisplay.classList.remove('scale-150', 'text-white'), 300);
+            // 1. Obtener título
+            ui.loadText.textContent = "Buscando título del video...";
+            let title = "Desconocido";
+            try {
+                const noembedRes = await fetch('https://noembed.com/embed?url=' + url);
+                const data = await noembedRes.json();
+                if (data.title) title = data.title;
+            } catch (e) {}
 
-                currentIndex++;
-                speechBuffer = ""; // Limpiar buffer
-                liveTranscriptEl.textContent = "...";
+            ui.title.textContent = title;
 
-                // Barra progreso
-                const progress = (currentIndex / lyrics.length) * 100;
-                progressBar.style.width = `${progress}%`;
+            // 2. Generar LRC
+            ui.loadText.textContent = "I.A. Generando formato LRC...";
+            const parsedLrc = await fetchLRC(title, key);
+            
+            if (!parsedLrc || parsedLrc.length === 0) {
+                ui.errOut.textContent = "Error al generar la letra. Revisa tu API Key o prueba otra canción.";
+                ui.errOut.classList.remove('hidden');
+                ui.prepBtn.classList.remove('hidden');
+                ui.loadState.classList.add('hidden');
+                ui.loadState.classList.remove('flex');
+                return;
+            }
 
-                if (currentIndex >= lyrics.length) {
-                    currentLineEl.textContent = "¡Increíble! 🎉";
-                    nextLineEl.textContent = `Puntaje final: ${score}`;
-                    currentLineEl.classList.replace('text-white', 'text-yellow-400');
-                    stopKaraoke();
-                } else {
-                    currentLineEl.textContent = lyrics[currentIndex];
-                    nextLineEl.textContent = lyrics[currentIndex + 1] || "";
-                }
-            };
-
-            // --- STREAMING_CHUNK:Lógica Fuzzy Match... ---
-            const checkMatch = (heardText) => {
-                if (currentIndex >= lyrics.length) return;
-
-                const targetLine = lyrics[currentIndex];
-                const normHeard = normalizeText(heardText);
-                const normTarget = normalizeText(targetLine);
-
-                if (!normHeard) return;
-
-                // 1. Unión sin espacios
-                const heardNoSpaces = normHeard.replace(/\s+/g, '');
-                const targetNoSpaces = normTarget.replace(/\s+/g, '');
-                
-                if (heardNoSpaces.includes(targetNoSpaces)) {
-                    advanceLine();
-                    return;
-                }
-
-                // 2. Coincidencia del 75%
-                const targetWords = normTarget.split(' ').filter(w => w.length > 0);
-                const heardWords = normHeard.split(' ');
-                
-                let matchCount = 0;
-                targetWords.forEach(word => {
-                    if (heardWords.includes(word) || normHeard.includes(word)) {
-                        matchCount++;
+            lrcData = parsedLrc;
+            
+            // 3. Preparar Interfaz
+            ui.setup.classList.add('hidden');
+            ui.karaoke.classList.remove('hidden');
+            
+            // Inicializar reproductor
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('player', {
+                    videoId: videoId,
+                    playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'modestbranding': 1, 'rel': 0 },
+                    events: {
+                        'onReady': () => { document.getElementById('player').classList.remove('opacity-0'); }
                     }
                 });
+            }
+            
+            renderLyrics(0); // Estado inicial
+            setupSpeechRecognition();
+        });
 
-                if (targetWords.length > 0 && (matchCount / targetWords.length) >= 0.75) {
-                    advanceLine();
+        function renderLyrics(index) {
+            if (index < 0 || index >= lrcData.length) return;
+            
+            ui.curLine.classList.remove('voice-match-glow'); // Reiniciar animación de premio
+            
+            ui.prevLine.textContent = index > 0 ? lrcData[index - 1].text : "";
+            ui.curLine.textContent = lrcData[index].text;
+            ui.nextLine.textContent = index < lrcData.length - 1 ? lrcData[index + 1].text : "";
+            
+            currentLyricIndex = index;
+            speechBuffer = ""; // Limpiar lo que el usuario decía para la nueva línea
+        }
+
+        function karaokeLoop() {
+            if (!isPlaying || !player || typeof player.getCurrentTime !== 'function') return;
+
+            const ytTime = player.getCurrentTime();
+            const adjustedTime = ytTime + syncOffset;
+
+            // Encontrar qué línea debe estar activa ahora mismo
+            let activeIdx = -1;
+            for (let i = lrcData.length - 1; i >= 0; i--) {
+                if (adjustedTime >= lrcData[i].time) {
+                    activeIdx = i;
+                    break;
                 }
-            };
+            }
 
-            // Eventos de Voz
-            recognition.onstart = () => {
-                isRecording = true;
-                statusIndicator.classList.remove('hidden');
-            };
+            // Si cambió la línea en base al reloj, actualizamos la pantalla
+            if (activeIdx !== -1 && activeIdx !== currentLyricIndex) {
+                renderLyrics(activeIdx);
+            }
+
+            animationFrameId = requestAnimationFrame(karaokeLoop);
+        }
+
+        function setupSpeechRecognition() {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) return;
+
+            recognition = new SpeechRec();
+            recognition.lang = 'es-ES';
+            recognition.continuous = true;
+            recognition.interimResults = true;
 
             recognition.onresult = (event) => {
-                if (currentIndex >= lyrics.length || !isRecording) return;
-
-                let interimTranscript = '';
-                let finalTranscriptThisLoop = '';
-
+                if (currentLyricIndex < 0 || currentLyricIndex >= lrcData.length) return;
+                
+                let interim = '';
+                let final = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscriptThisLoop += event.results[i][0].transcript + ' ';
-                    } else {
-                        interimTranscript += event.results[i][0].transcript + ' ';
+                    if (event.results[i].isFinal) final += event.results[i][0].transcript + ' ';
+                    else interim += event.results[i][0].transcript + ' ';
+                }
+                
+                speechBuffer += final;
+                const fullText = normalizeText(speechBuffer + interim);
+                const targetText = normalizeText(lrcData[currentLyricIndex].text);
+
+                if (!fullText || !targetText) return;
+
+                // Validación simple para colorear (fuzzy match)
+                const targetNoSpaces = targetText.replace(/\s+/g, '');
+                const heardNoSpaces = fullText.replace(/\s+/g, '');
+
+                if (heardNoSpaces.includes(targetNoSpaces)) {
+                    triggerVoiceReward();
+                } else {
+                    // Chequeo de % de palabras
+                    const targetWords = targetText.split(' ').filter(w=>w);
+                    let matches = 0;
+                    targetWords.forEach(w => { if (fullText.includes(w)) matches++; });
+                    if (targetWords.length > 0 && (matches / targetWords.length) >= 0.75) {
+                        triggerVoiceReward();
                     }
                 }
-
-                if (finalTranscriptThisLoop) {
-                    speechBuffer += finalTranscriptThisLoop;
-                }
-
-                const fullStringToEvaluate = speechBuffer + interimTranscript;
-                liveTranscriptEl.textContent = fullStringToEvaluate.trim() ? `"${fullStringToEvaluate.trim()}"` : "...";
-                
-                checkMatch(fullStringToEvaluate);
             };
 
-            recognition.onend = () => {
-                statusIndicator.classList.add('hidden');
-                // Auto reinicio si no hemos parado manual y no ha acabado la canción
-                if (isRecording && currentIndex < lyrics.length) {
-                    try { recognition.start(); } catch(e){}
-                } else {
-                    isRecording = false;
-                }
-            };
+            recognition.onend = () => { if (isPlaying) try { recognition.start(); } catch(e){} };
+        }
 
-            recognition.onerror = (event) => {
-                if (event.error === 'not-allowed') {
-                    showError("Acceso al micrófono denegado.");
-                    stopKaraoke();
-                }
-            };
+        function triggerVoiceReward() {
+            if (!ui.curLine.classList.contains('voice-match-glow')) {
+                // Forzar reflow para reiniciar animación si ya estaba
+                ui.curLine.classList.remove('voice-match-glow');
+                void ui.curLine.offsetWidth;
+                ui.curLine.classList.add('voice-match-glow');
+            }
+        }
 
-            // --- STREAMING_CHUNK:Control de botones y UI... ---
-            function startKaraoke() {
-                if (!isYouTubeReady || !recognition) return;
-                
-                // Si la canción ya terminó antes, reiniciar todo
-                if (currentIndex >= lyrics.length) {
-                    currentIndex = 0;
-                    score = 0;
-                    scoreDisplay.textContent = "0";
-                    progressBar.style.width = "0%";
-                    currentLineEl.classList.replace('text-yellow-400', 'text-white');
-                    player.seekTo(0);
-                }
-
-                currentLineEl.textContent = lyrics[currentIndex];
-                nextLineEl.textContent = lyrics[currentIndex + 1] || "";
-                liveTranscriptEl.textContent = "¡Canta ahora!";
-                speechBuffer = "";
-
-                // Iniciar Audio y Video
+        ui.startBtn.addEventListener('click', () => {
+            if (player && typeof player.playVideo === 'function') {
                 player.playVideo();
-                try { recognition.start(); } catch(e){}
-                
-                // Actualizar Botones
-                startBtn.classList.add('hidden');
-                stopBtn.classList.remove('hidden');
             }
-
-            function stopKaraoke() {
-                isRecording = false;
-                if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
-                try { recognition.stop(); } catch(e){}
-                
-                statusIndicator.classList.add('hidden');
-                startBtn.classList.remove('hidden');
-                stopBtn.classList.add('hidden');
-                startBtn.innerHTML = "▶️ Reanudar";
-            }
-
-            function showError(msg) {
-                errorContainer.textContent = msg;
-                errorContainer.classList.remove('hidden');
-            }
-
-            startBtn.addEventListener('click', startKaraoke);
-            stopBtn.addEventListener('click', stopKaraoke);
+            isPlaying = true;
+            ui.startBtn.classList.add('hidden');
+            ui.syncPanel.classList.remove('hidden');
+            
+            try { recognition.start(); } catch(e){}
+            
+            karaokeLoop(); // Iniciar motor temporal
+            
+            // Ocultar controles automáticamente después de 3s sin mover el ratón
+            hideControlsTimeout = setTimeout(() => ui.footer.classList.add('idle'), 3000);
         });
+
+        // Controles de Sync Offset
+        document.querySelectorAll('.offset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const val = parseFloat(e.target.dataset.val);
+                syncOffset += val;
+                ui.offsetDisp.textContent = (syncOffset > 0 ? "+" : "") + syncOffset.toFixed(1) + "s";
+                
+                // Forzar re-evaluación inmediata
+                currentLyricIndex = -1; 
+            });
+        });
+
+        // Lógica de inactividad de ratón para Modo TV inmersivo
+        let hideControlsTimeout;
+        window.addEventListener('mousemove', () => {
+            if (isPlaying) {
+                ui.footer.classList.remove('idle');
+                clearTimeout(hideControlsTimeout);
+                hideControlsTimeout = setTimeout(() => ui.footer.classList.add('idle'), 3000);
+            }
+        });
+
     </script>
 </body>
 </html>
