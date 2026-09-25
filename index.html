@@ -175,7 +175,26 @@
             <button id="btn-fetch" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-xl transition-all mt-6 shadow-[0_0_30px_rgba(202,138,4,0.4)] hover:shadow-[0_0_40px_rgba(251,191,36,0.6)] transform hover:-translate-y-1">
                 Generar Escenario
             </button>
+
+            <button id="btn-help" class="w-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl transition-all mt-3 text-xs md:text-sm border border-slate-600/50 flex items-center justify-center gap-2">
+                <i class="fas fa-plug text-cyan-400"></i> ¿No te detecta la voz? Ver Guía de Conexión Pro
+            </button>
+
             <div id="setup-error" class="text-red-400 text-xs md:text-sm font-bold text-center hidden mt-4 bg-red-900/30 p-3 rounded-lg border border-red-500/30"></div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-lg w-full text-sm md:text-base border-cyan-500/30 shadow-[0_0_40px_rgba(6,182,212,0.2)]">
+            <h2 class="text-2xl font-black text-cyan-400 mb-4"><i class="fas fa-project-diagram"></i> Guía: Audio Profesional</h2>
+            <p class="text-slate-200 mb-3 leading-relaxed">Como tus micrófonos van conectados a la consola BOSE, la computadora <b>no está recibiendo tu voz</b> físicamente.</p>
+            <p class="text-slate-200 mb-3 font-bold text-yellow-400">Para que la página dé puntos necesitas un Cable de Retorno:</p>
+            <ol class="list-decimal list-inside text-slate-300 space-y-2 mb-6 font-medium bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <li>Ubica una salida libre en tu BOSE (Aux Out, Line Out o Audífonos).</li>
+                <li>Conecta un cable desde esa salida hasta la <b>Entrada de Micrófono</b> de tu Laptop.</li>
+                <li>En Windows, selecciona esa entrada de micrófono (Line In / USB Audio) como predeterminada.</li>
+            </ol>
+            <button id="btn-close-help" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-3 rounded-xl shadow-lg transition-all">¡Entendido, a conectar!</button>
         </div>
     </div>
 
@@ -299,6 +318,9 @@
 
         const setupScreen = document.getElementById('setup-screen');
         const setupError = document.getElementById('setup-error');
+        const helpModal = document.getElementById('help-modal');
+        const btnHelp = document.getElementById('btn-help');
+        const btnCloseHelp = document.getElementById('btn-close-help');
         const loadingScreen = document.getElementById('loading-screen');
         const karaokeScreen = document.getElementById('karaoke-screen');
         const startOverlay = document.getElementById('start-overlay');
@@ -322,6 +344,9 @@
             setupError.innerText = msg;
             setupError.classList.remove('hidden');
         }
+
+        btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
+        btnCloseHelp.addEventListener('click', () => helpModal.classList.add('hidden'));
 
         function extractVideoId(url) {
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
