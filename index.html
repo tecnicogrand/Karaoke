@@ -254,6 +254,13 @@
             
             <div class="w-[1px] h-8 bg-white/20 mx-2"></div>
             
+            <!-- Botón Ocultar/Mostrar Micrófono -->
+            <button id="btn-toggle-mic" class="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xs font-black text-white shadow-[0_0_15px_rgba(79,70,229,0.5)] transition uppercase tracking-widest flex items-center justify-center">
+                <i class="fas fa-eye mr-2"></i> Mic
+            </button>
+
+            <div class="w-[1px] h-8 bg-white/20 mx-2"></div>
+            
             <!-- Botón Pausa/Reanudar -->
             <button id="btn-pause" class="flex-1 px-8 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-full text-sm font-black text-white shadow-[0_0_15px_rgba(0,240,255,0.4)] transition uppercase tracking-widest flex justify-center items-center">
                 <i class="fas fa-pause mr-2"></i> Pausa
@@ -285,6 +292,7 @@
         let micMonitorTimeout;
         let isPaused = false;
         let isCountingDown = false;
+        let isMicMonitorVisible = true;
         
         const ui = {
             setup: document.getElementById('setup-screen'),
@@ -306,6 +314,7 @@
             floatingContainer: document.getElementById('floating-score-container'),
             micMonitor: document.getElementById('mic-monitor'),
             micText: document.getElementById('mic-monitor-text'),
+            btnToggleMic: document.getElementById('btn-toggle-mic'),
             btnPause: document.getElementById('btn-pause'),
             countdownOverlay: document.getElementById('countdown-overlay'),
             countdownText: document.getElementById('countdown-text')
@@ -438,13 +447,14 @@
             ui.prevText.innerText = text;
             ui.prevBadge.className = 'badge'; // reset
             
-            if (ratio >= 0.99) {
+            // Umbrales de dificultad reducidos
+            if (ratio >= 0.80) {
                 ui.prevBadge.classList.add('badge-perfect');
                 ui.prevBadge.innerText = "Perfecto +300";
-            } else if (ratio >= 0.75) {
+            } else if (ratio >= 0.50) {
                 ui.prevBadge.classList.add('badge-excellent');
                 ui.prevBadge.innerText = "Excelente +200";
-            } else if (ratio >= 0.50) {
+            } else if (ratio >= 0.30) {
                 ui.prevBadge.classList.add('badge-good');
                 ui.prevBadge.innerText = "Bien +100";
             } else {
@@ -472,7 +482,12 @@
         }
 
         document.getElementById('btn-start-karaoke').addEventListener('click', () => {
-            ui.overlay.classList.add('hidden'); ui.hud.classList.remove('hidden'); ui.micMonitor.classList.remove('hidden');
+            ui.overlay.classList.add('hidden'); ui.hud.classList.remove('hidden'); 
+            
+            ui.micMonitor.classList.remove('hidden');
+            if (!isMicMonitorVisible) ui.micMonitor.style.display = 'none';
+            else ui.micMonitor.style.display = 'block';
+
             player.playVideo(); initMicForScoring(); 
             lastYTTime = player.getCurrentTime(); lastPerformanceTime = performance.now();
             syncLoop(); 
@@ -499,8 +514,8 @@
                         const lineText = lrcData[currentLineIndex].text;
                         evaluatePreviousLine(lineText, lastLineHitRatio);
                         
-                        if (lastLineHitRatio < 0.5 && lineText.length > 2) combo = 1; 
-                        else if (lastLineHitRatio >= 0.5) combo++;
+                        if (lastLineHitRatio < 0.30 && lineText.length > 2) combo = 1; 
+                        else if (lastLineHitRatio >= 0.30) combo++;
                         updateHUD();
                     }
 
@@ -568,6 +583,19 @@
         document.getElementById('btn-sync-p').addEventListener('click', () => { syncOffset += 0.5; updateSyncDisplay(); });
         document.getElementById('btn-sync-p5').addEventListener('click', () => { syncOffset += 5; updateSyncDisplay(); });
 
+        ui.btnToggleMic.addEventListener('click', () => {
+            isMicMonitorVisible = !isMicMonitorVisible;
+            if (isMicMonitorVisible) {
+                ui.btnToggleMic.innerHTML = '<i class="fas fa-eye mr-2"></i> Mic';
+                ui.btnToggleMic.className = 'px-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xs font-black text-white shadow-[0_0_15px_rgba(79,70,229,0.5)] transition uppercase tracking-widest flex items-center justify-center';
+                ui.micMonitor.style.display = 'block';
+            } else {
+                ui.btnToggleMic.innerHTML = '<i class="fas fa-eye-slash mr-2 text-gray-400"></i> Mic';
+                ui.btnToggleMic.className = 'px-4 py-3 bg-white/10 hover:bg-white/20 rounded-full text-xs font-black text-gray-300 transition uppercase tracking-widest flex items-center justify-center';
+                ui.micMonitor.style.display = 'none';
+            }
+        });
+
         document.getElementById('btn-exit').addEventListener('click', () => {
             cancelAnimationFrame(animationFrameId);
             if(player && player.destroy) player.destroy();
@@ -599,24 +627,29 @@
                     for (let i = Math.max(0, event.results.length - 3); i < event.results.length; ++i) transcript += event.results[i][0].transcript;
                     
                     ui.micText.innerText = `"${transcript.trim()}"`;
-                    ui.micMonitor.classList.remove('opacity-0');
+                    if (isMicMonitorVisible) ui.micMonitor.classList.remove('opacity-0');
                     clearTimeout(micMonitorTimeout);
-                    micMonitorTimeout = setTimeout(() => { ui.micText.innerText = "..."; }, 2500);
+                    micMonitorTimeout = setTimeout(() => { ui.micText.innerText = "..."; ui.micMonitor.classList.add('opacity-0'); }, 2500);
 
                     const saidWords = cleanStr(transcript);
                     const targetWords = cleanStr(lrcData[currentLineIndex].text);
                     if (targetWords.length === 0) return;
 
                     let matchCount = 0;
-                    targetWords.forEach(w => { if (saidWords.includes(w)) matchCount++; });
+                    targetWords.forEach(targetW => { 
+                        // Búsqueda permisiva: Tolera palabras incompletas o similares
+                        if (saidWords.some(saidW => targetW === saidW || (targetW.length > 3 && (saidW.includes(targetW) || targetW.includes(saidW))))) {
+                            matchCount++;
+                        }
+                    });
                     
                     let ratio = matchCount / targetWords.length;
                     if (ratio > lastLineHitRatio) lastLineHitRatio = ratio;
 
                     let base = 0;
-                    if (lastLineHitRatio >= 0.99) base = 300;
-                    else if (lastLineHitRatio >= 0.75) base = 200;
-                    else if (lastLineHitRatio >= 0.5) base = 100;
+                    if (lastLineHitRatio >= 0.80) base = 300;
+                    else if (lastLineHitRatio >= 0.50) base = 200;
+                    else if (lastLineHitRatio >= 0.30) base = 100;
 
                     let totalPossible = base * combo;
                     let incremental = totalPossible - currentLineMaxPoints;
