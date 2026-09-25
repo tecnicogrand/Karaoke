@@ -488,6 +488,7 @@
                 playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'modestbranding': 1, 'rel': 0 },
                 events: { 
                     'onReady': () => {
+                        player.setVolume(100); // <--- Ajusta el volumen aquí (0 a 100)
                         ui.load.classList.add('hidden');
                         ui.load.classList.remove('flex');
                         ui.karaoke.classList.remove('hidden');
