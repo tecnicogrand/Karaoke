@@ -19,33 +19,42 @@
         .lyric-line {
             transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
         }
         
-        /* Efecto de llenado de Karaoke (Gradient + Clip) */
         .lyric-active {
-            font-size: 4rem;
-            line-height: 1.2;
+            font-size: 3.5rem;
+            line-height: 1.3;
             transform: scale(1.05);
-            /* Variables CSS para el pintado dinámico */
-            --fill-pct: 0%;
-            --fill-color: #4ade80; /* Verde esmeralda por defecto */
-            background-image: linear-gradient(to right, var(--fill-color) var(--fill-pct), #ffffff var(--fill-pct));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        }
+
+        .lyric-word {
+            color: rgba(255, 255, 255, 0.3); /* Letra apagada por defecto */
+            transition: color 0.1s ease, transform 0.1s ease, text-shadow 0.1s ease;
+        }
+
+        /* Clase dinámica que se añade palabra por palabra */
+        .lyric-word.filled {
+            color: #4ade80; /* Verde esmeralda */
+            transform: scale(1.05) translateY(-2px);
+            text-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
         }
 
         .lyric-next {
             color: rgba(255, 255, 255, 0.4);
-            font-size: 2.2rem;
+            font-size: 2rem;
             margin-top: 1.5rem;
         }
 
-        /* Brillo extra al acertar la frase */
-        .lyric-success {
-            --fill-color: #fbbf24 !important; /* Cambia a dorado */
-            filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8)) drop-shadow(2px 4px 6px rgba(0,0,0,0.9)) !important;
-            transform: scale(1.1);
+        /* Brillo extra al acertar la frase (50%) */
+        .lyric-active.success .lyric-word {
+            color: #fbbf24 !important; /* Cambia toda la frase a dorado */
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.8), 2px 4px 6px rgba(0,0,0,0.9) !important;
+            transform: scale(1.05) translateY(-2px) !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         #youtube-player-container {
@@ -101,12 +110,12 @@
 <body class="h-screen w-screen flex items-center justify-center relative">
 
     <!-- Monitor del Micrófono (Arriba Izquierda) -->
-    <div id="mic-monitor" class="hidden absolute top-6 left-8 z-40 bg-black/50 backdrop-blur-md border border-blue-500/30 rounded-xl p-4 shadow-2xl max-w-sm w-full transition-opacity duration-300">
-        <div class="flex items-center text-blue-400 mb-1">
+    <div id="mic-monitor" class="hidden absolute top-6 left-8 z-40 bg-black/60 backdrop-blur-md border border-blue-500/40 rounded-xl p-4 shadow-2xl max-w-md w-full transition-opacity duration-300">
+        <div class="flex items-center text-blue-400 mb-2 border-b border-blue-500/20 pb-2">
             <i class="fas fa-microphone-alt animate-pulse mr-2"></i>
-            <span class="text-xs font-bold uppercase tracking-widest">El micrófono escucha:</span>
+            <span class="text-xs font-bold uppercase tracking-widest">Escuchando en vivo...</span>
         </div>
-        <p id="mic-monitor-text" class="text-white text-sm font-medium italic min-h-[1.5rem]">...</p>
+        <p id="mic-monitor-text" class="text-white text-base font-medium italic min-h-[3rem]">...</p>
     </div>
 
     <!-- HUD Puntuación (Arriba Derecha) -->
@@ -126,9 +135,9 @@
 
     <section id="setup-screen" class="bg-black/60 backdrop-blur-xl p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-xl z-10 border border-white/10">
         <h1 class="text-4xl font-black mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 drop-shadow-md">
-            <i class="fas fa-microphone-alt text-blue-400"></i> Smart Karaoke
+            <i class="fas fa-music text-blue-400"></i> Smart Karaoke
         </h1>
-        <p class="text-center text-slate-400 text-sm mb-8 font-bold tracking-wide">Llenado progresivo y detección en vivo</p>
+        <p class="text-center text-slate-400 text-sm mb-8 font-bold tracking-wide">Karaoke Inteligente sin Configuración</p>
         
         <div class="space-y-6">
             <div>
@@ -144,7 +153,7 @@
             <div id="error-msg" class="hidden bg-red-900/80 border border-red-500 text-red-100 text-sm p-4 rounded-xl text-center font-bold shadow-lg"></div>
 
             <button id="btn-fetch" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] mt-2 uppercase tracking-wide">
-                Preparar Escenario
+                Generar Escenario
             </button>
         </div>
     </section>
@@ -165,10 +174,12 @@
         </div>
 
         <div id="lyrics-container" class="text-center w-11/12 max-w-6xl z-10 flex flex-col items-center justify-center h-full pb-20">
+            <!-- La letra actual ahora alojará spans por palabra -->
             <div id="current-lyric" class="lyric-line lyric-active w-full px-4">...</div>
-            <div id="next-lyric" class="lyric-line lyric-next w-full px-4 line-clamp-2">...</div>
+            <div id="next-lyric" class="lyric-line lyric-next w-full px-4 line-clamp-2 mt-8">...</div>
         </div>
 
+        <!-- Panel de Control Inferior -->
         <footer id="controls-panel" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-xl rounded-full p-3 flex items-center gap-3 idle-show z-40 border border-white/10 shadow-2xl w-[90%] max-w-3xl justify-between">
             <div class="flex gap-2">
                 <button id="btn-sync-m5" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-full text-sm font-bold text-white transition">-5s</button>
@@ -192,7 +203,7 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // Estado
+        // --- ESTADO GLOBAL ---
         let lrcData = [];
         let currentLineIndex = -1;
         let player;
@@ -208,6 +219,7 @@
         let lastPerformanceTime = performance.now();
         let micMonitorTimeout;
         
+        // --- REFERENCIAS UI ---
         const ui = {
             setup: document.getElementById('setup-screen'),
             load: document.getElementById('loading-screen'),
@@ -227,6 +239,7 @@
             micText: document.getElementById('mic-monitor-text')
         };
         
+        // --- UTILIDADES ---
         function showError(msg) {
             ui.errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i> ${msg}`;
             ui.errorMsg.classList.remove('hidden');
@@ -239,6 +252,7 @@
             return match ? match[1] : null;
         }
 
+        // --- STREAMING_CHUNK:Fetching YouTube metadata and LRCLIB data... ---
         async function fetchVideoTitle(vidId) {
             try {
                 const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vidId}`);
@@ -252,6 +266,7 @@
 
             if (!searchQuery) {
                 let cleanTitle = autoTitle.toLowerCase();
+                // Limpieza agresiva de basura de títulos de YT
                 cleanTitle = cleanTitle.replace(/\([^)]*\)|\[[^\]]*\]/g, ' ');
                 const stopWords = ['official', 'video', 'oficial', 'lyrics', 'lyric', 'letra', 'audio', 'remastered', '4k', 'hd', 'feat.', 'ft.', 'remix', 'music'];
                 const regex = new RegExp(`\\b(${stopWords.join('|')})\\b`, 'gi');
@@ -259,16 +274,16 @@
                 searchQuery = cleanTitle;
             }
 
-            if (!searchQuery) throw new Error("Título muy confuso. Escribe la canción manualmente.");
+            if (!searchQuery) throw new Error("Título confuso. Escribe la canción manualmente.");
 
             const url = `https://lrclib.net/api/search?q=${encodeURIComponent(searchQuery)}`;
             
             const response = await fetch(url);
-            if (!response.ok) throw new Error("Fallo al contactar la base de datos de letras.");
+            if (!response.ok) throw new Error("Error contactando la base de datos de letras (LRCLIB).");
             const data = await response.json();
             
             const track = data.find(t => t.syncedLyrics);
-            if (!track) throw new Error(`No se encontró la letra sincronizada. Intenta buscarla manualmente (Ej: "Artista Canción").`);
+            if (!track) throw new Error(`No se encontró la letra sincronizada. Usa el campo "Canción" para buscar (Ej: "Artista Canción").`);
             return track.syncedLyrics;
         }
 
@@ -288,14 +303,15 @@
             return result.sort((a, b) => a.time - b.time);
         }
 
+        // --- STREAMING_CHUNK:Setting up Playback and Synchronization Logic... ---
         document.getElementById('btn-fetch').addEventListener('click', async () => {
             hideError();
             const url = document.getElementById('youtube-url').value.trim();
             const manualQ = document.getElementById('manual-query').value.trim();
 
-            if (!url) return showError("Debes ingresar el link del video de YouTube.");
+            if (!url) return showError("Ingresa el enlace del video de YouTube.");
             videoId = extractVideoId(url);
-            if (!videoId) return showError("El enlace de YouTube no es válido.");
+            if (!videoId) return showError("Enlace inválido.");
 
             ui.setup.classList.add('hidden');
             ui.load.classList.remove('hidden');
@@ -305,7 +321,7 @@
                 ui.loadTxt.innerText = "Preparando escenario...";
                 let videoTitle = manualQ ? "" : await fetchVideoTitle(videoId);
                 
-                ui.loadTxt.innerText = "Buscando letras en la base de datos...";
+                ui.loadTxt.innerText = "Descargando letras sincronizadas...";
                 const rawLRC = await fetchLyricsFromPublicDB(videoTitle, manualQ);
                 
                 lrcData = parseLRC(rawLRC);
@@ -344,15 +360,13 @@
             
             currentLineIndex = -1;
             currentLineScored = false;
-            ui.curLyric.innerText = "¡Prepara tu voz!";
-            ui.curLyric.style.setProperty('--fill-pct', `0%`);
-            ui.nxtLyric.innerText = "Presiona Cantar";
+            ui.curLyric.innerHTML = "<span class='lyric-word'>¡Prepara</span> <span class='lyric-word'>tu</span> <span class='lyric-word'>voz!</span>";
+            ui.nxtLyric.innerText = "Presiona Iniciar Canción";
         }
 
         function updateHUD() {
             ui.scoreDisp.innerText = score;
             ui.comboDisp.innerText = `x${combo}`;
-            
             if (combo === 1 && score > 0) {
                 ui.comboDisp.classList.remove('text-yellow-400');
                 ui.comboDisp.classList.add('text-red-500');
@@ -367,10 +381,8 @@
             const floatEl = document.createElement('div');
             floatEl.className = 'floating-score';
             floatEl.innerText = `+${points}`;
-            
             const offset = (Math.random() - 0.5) * 150;
             floatEl.style.left = `calc(50% + ${offset}px)`;
-            
             ui.floatingContainer.appendChild(floatEl);
             setTimeout(() => floatEl.remove(), 1000);
         }
@@ -387,18 +399,30 @@
             syncLoop(); 
         });
 
+        // --- STREAMING_CHUNK:Word-by-word UI rendering and exact timing... ---
+        function renderCurrentLineWordByWord(text) {
+            ui.curLyric.innerHTML = '';
+            ui.curLyric.classList.remove('success');
+            const words = text.split(/\s+/);
+            words.forEach(word => {
+                if (word.trim() === '') return;
+                const span = document.createElement('span');
+                span.className = 'lyric-word';
+                span.innerText = word;
+                ui.curLyric.appendChild(span);
+            });
+        }
+
         function syncLoop() {
             if (player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) {
                 const currentYTTime = player.getCurrentTime();
                 const now = performance.now();
 
-                // Resincronizar el high-res timer cuando YouTube actualiza su reloj
+                // Interpolación de alta precisión a 60fps
                 if (currentYTTime !== lastYTTime) {
                     lastYTTime = currentYTTime;
                     lastPerformanceTime = now;
                 }
-
-                // Cálculo preciso del tiempo
                 const interpolatedTime = lastYTTime + ((now - lastPerformanceTime) / 1000);
                 const finalTime = interpolatedTime + syncOffset;
                 
@@ -411,39 +435,50 @@
 
                 if (newIndex !== currentLineIndex && newIndex >= 0) {
                     if (currentLineIndex >= 0 && !currentLineScored && lrcData[currentLineIndex].text.length > 2) {
-                        combo = 1; // Pierde combo si no cantó la línea
+                        combo = 1; // Pierde el combo si no cantó la frase
                         updateHUD();
                     }
 
                     currentLineIndex = newIndex;
                     currentLineScored = false; 
                     
-                    ui.curLyric.innerText = lrcData[currentLineIndex].text;
-                    ui.curLyric.classList.remove('lyric-success');
+                    // Renderizamos la nueva línea creando <span> por palabra
+                    renderCurrentLineWordByWord(lrcData[currentLineIndex].text);
                     ui.nxtLyric.innerText = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].text : "";
                 }
 
-                // EFECTO KARAOKE FILL PROGRESIVO
-                if (currentLineIndex >= 0) {
+                // EFECTO DE LLENADO PALABRA POR PALABRA (Word Fill)
+                if (currentLineIndex >= 0 && !currentLineScored) {
                     const lineStart = lrcData[currentLineIndex].time;
-                    // Asumir que termina cuando empieza la siguiente, o 5 segs si es la última
-                    const lineEnd = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].time : lineStart + 5;
+                    const lineEnd = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].time : lineStart + 4;
                     
                     let progress = 0;
                     if (finalTime > lineStart && finalTime < lineEnd) {
-                        progress = ((finalTime - lineStart) / (lineEnd - lineStart)) * 100;
+                        progress = (finalTime - lineStart) / (lineEnd - lineStart);
                     } else if (finalTime >= lineEnd) {
-                        progress = 100;
+                        progress = 1;
                     }
+                    progress = Math.max(0, Math.min(progress, 1)); // Clamp 0-1
                     
-                    // Asegurar porcentaje entre 0 y 100
-                    const clampedProgress = Math.min(Math.max(progress, 0), 100);
-                    ui.curLyric.style.setProperty('--fill-pct', `${clampedProgress}%`);
+                    const wordSpans = ui.curLyric.querySelectorAll('.lyric-word');
+                    const totalWords = wordSpans.length;
+                    
+                    // Calculamos cuantas palabras deberian estar encendidas basado en el progreso
+                    const wordsToFill = Math.floor(progress * (totalWords + 1)); 
+
+                    wordSpans.forEach((span, idx) => {
+                        if (idx < wordsToFill) {
+                            span.classList.add('filled');
+                        } else {
+                            span.classList.remove('filled');
+                        }
+                    });
                 }
             }
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
+        // --- STREAMING_CHUNK:Interaction logic and Voice Recognition (50% rule)... ---
         function updateSyncDisplay() {
             const sign = syncOffset > 0 ? "+" : "";
             ui.syncDisp.innerText = `${sign}${syncOffset.toFixed(1)}s`;
@@ -466,7 +501,7 @@
             if(recognition) recognition.stop();
         });
 
-        // Ocultar UI si no hay movimiento
+        // Ocultar UI inferior por inactividad
         let idleTimer;
         document.addEventListener('mousemove', () => {
             if (!ui.karaoke.classList.contains('hidden')) {
@@ -484,7 +519,7 @@
 
         function initMicForScoring() {
             if (!SpeechRecognition) {
-                ui.micText.innerText = "API no soportada en este navegador.";
+                ui.micText.innerText = "Micrófono no soportado en este navegador.";
                 ui.micText.classList.add("text-red-400");
                 return;
             }
@@ -493,9 +528,13 @@
                 recognition = new SpeechRecognition();
                 recognition.lang = 'es-ES';
                 recognition.continuous = true;
-                recognition.interimResults = true; // Para ver el texto en vivo
+                recognition.interimResults = true; 
 
-                const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase().replace(/\s+/g, '');
+                // Función que limpia el texto y lo devuelve como arreglo de palabras
+                const getCleanWordsArray = (str) => {
+                    const cleanStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
+                    return cleanStr.split(/\s+/).filter(w => w.length > 0);
+                };
 
                 recognition.onresult = (event) => {
                     let transcript = "";
@@ -503,25 +542,36 @@
                         transcript += event.results[i][0].transcript;
                     }
                     
-                    // Mostrar lo que escucha el micrófono
                     ui.micText.innerText = `"${transcript.trim()}"`;
                     ui.micMonitor.classList.remove('opacity-0');
                     
                     clearTimeout(micMonitorTimeout);
                     micMonitorTimeout = setTimeout(() => {
                         ui.micText.innerText = "...";
-                    }, 2000);
+                    }, 2500);
 
-                    // Lógica de Puntuación
+                    // COMPARADOR DE PALABRAS AL 50%
                     if (currentLineIndex < 0 || !lrcData[currentLineIndex] || currentLineScored) return;
                     
-                    const said = normalize(transcript);
-                    const target = normalize(lrcData[currentLineIndex].text);
+                    const saidWords = getCleanWordsArray(transcript);
+                    const targetWords = getCleanWordsArray(lrcData[currentLineIndex].text);
 
-                    // Acertar si se dijo al menos el 40% de la línea actual
-                    if (target.length > 2 && said.includes(target.substring(0, Math.floor(target.length * 0.4)))) {
+                    if (targetWords.length === 0) return;
+
+                    let matchCount = 0;
+                    // Comprobamos cuantas palabras objetivo existen dentro de lo que se escuchó
+                    targetWords.forEach(targetWord => {
+                        if (saidWords.includes(targetWord)) {
+                            matchCount++;
+                        }
+                    });
+
+                    // Regla de victoria: Al menos el 50% de las palabras deben ser dichas correctamente
+                    const hitRatio = matchCount / targetWords.length;
+                    
+                    if (hitRatio >= 0.5) {
                         currentLineScored = true;
-                        ui.curLyric.classList.add('lyric-success');
+                        ui.curLyric.classList.add('success'); // Brillo dorado a toda la frase
                         
                         const earnedPoints = 100 * combo;
                         score += earnedPoints;
@@ -533,7 +583,7 @@
 
                 recognition.onerror = (e) => {
                     if (e.error !== 'no-speech') {
-                        ui.micText.innerText = "Error: " + e.error;
+                        ui.micText.innerText = "Error Mic: " + e.error;
                         ui.micText.classList.add("text-red-400");
                     }
                 };
