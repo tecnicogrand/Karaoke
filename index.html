@@ -391,22 +391,12 @@
         async function fetchLyricsFromGemini(title, apiKey) {
             const prompt = `Devuelve la letra de "${title}" en formato LRC puro (ejemplo: [00:15.22] Línea de la canción). No incluyas markdown, introducciones ni comentarios. Solo texto LRC. Tu respuesta debe estar dentro de un campo 'text' en formato JSON.`;
             
-            // La URL base del modelo más estable actual
-            let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
-            let headers = { 'Content-Type': 'application/json' };
-
-            // El sistema ahora detecta qué tipo de credencial estás usando
-            if (apiKey.startsWith('AIza')) {
-                // Si es una API Key normal, va en el enlace
-                url += `?key=${apiKey}`;
-            } else {
-                // Si es un Token OAuth (AQ.), se envía como protocolo de seguridad Bearer
-                headers['Authorization'] = `Bearer ${apiKey}`;
-            }
+            // Volvemos al método estándar y oficial de Gemini
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
-                headers: headers,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: { responseMimeType: "application/json" }
@@ -414,8 +404,7 @@
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Error de Google AI: ${errorData.error?.message || 'Revisa tu clave API o Token'}`);
+                throw new Error(`Tu clave "${apiKey.substring(0,5)}..." fue rechazada. Google requiere una clave que empiece con "AIza".`);
             }
             
             const data = await response.json();
@@ -428,22 +417,6 @@
             }
             
             return rawText.replace(/```lrc/g, '').replace(/```json/g, '').replace(/```/g, '').trim();
-        }
-
-        function parseLRC(lrcText) {
-            const lines = lrcText.split('\n');
-            const result = [];
-            const regex = /\[(\d{2,}):(\d{2}(?:\.\d{1,3})?)\](.*)/;
-            
-            lines.forEach(line => {
-                const match = line.match(regex);
-                if (match) {
-                    const timeInSeconds = (parseInt(match[1], 10) * 60) + parseFloat(match[2]);
-                    const text = match[3].trim();
-                    if (text !== "") result.push({ time: timeInSeconds, text: text });
-                }
-            });
-            return result.sort((a, b) => a.time - b.time);
         }
 
         document.getElementById('btn-fetch').addEventListener('click', async () => {
@@ -473,14 +446,25 @@
                 ui.loadTxt.innerText = "Obteniendo datos del video...";
                 const videoTitle = await fetchVideoTitle(videoId);
                 
-                ui.loadTxt.innerText = useAI ? `Generando IA para: ${videoTitle}...` : `Buscando letras...`;
+                let rawLRC = "";
                 
-                const rawLRC = useAI 
-                    ? await fetchLyricsFromGemini(manualQ || videoTitle, apiKey)
-                    : await fetchLyricsFromPublicDB(videoTitle, manualQ);
+                // SISTEMA DE AUTO-RESCATE (FALLBACK)
+                if (useAI) {
+                    ui.loadTxt.innerText = `Generando IA para: ${videoTitle}...`;
+                    try {
+                        rawLRC = await fetchLyricsFromGemini(manualQ || videoTitle, apiKey);
+                    } catch (iaError) {
+                        alert(`❌ IA Falló: ${iaError.message}\n\n🔄 No te preocupes, buscando alternativa gratis en la base de datos pública...`);
+                        ui.loadTxt.innerText = "Buscando en servidor alternativo...";
+                        rawLRC = await fetchLyricsFromPublicDB(videoTitle, manualQ);
+                    }
+                } else {
+                    ui.loadTxt.innerText = `Buscando letras libres...`;
+                    rawLRC = await fetchLyricsFromPublicDB(videoTitle, manualQ);
+                }
                 
                 lrcData = parseLRC(rawLRC);
-                if (lrcData.length === 0) throw new Error("El archivo de letras estaba vacío o mal formateado.");
+                if (lrcData.length === 0) throw new Error("El archivo de letras estaba vacío o mal formateado. Intenta con la Búsqueda Manual.");
 
                 ui.loadTxt.innerText = "Cargando escenario...";
                 setupYouTubePlayer();
@@ -805,4 +789,4 @@
         });
     </script>
 </body>
-</html>
+</html>s
