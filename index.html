@@ -16,26 +16,24 @@
             overflow: hidden; 
         }
 
-        /* Arcade Neon & Glassmorphism */
+        /* */
         .glass-panel {
-            background: rgba(10, 10, 20, 0.6);
+            background: rgba(10, 10, 20, 0.7);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
         }
 
         /* Lyrics Rendering */
-        .lyric-line {
-            transition: opacity 0.3s ease;
-            text-align: center;
-        }
+        .lyric-line { text-align: center; }
         
         .lyric-active {
-            font-size: 4rem;
+            font-size: 3.5rem;
             line-height: 1.2;
             font-weight: 900;
             filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.9));
+            transition: color 0.3s ease;
         }
 
         .lyric-word {
@@ -45,44 +43,71 @@
             -webkit-text-stroke: 1px rgba(255,255,255,0.1);
         }
 
-        /* Relleno progresivo por tiempo */
         .lyric-word.filled {
-            color: #00f0ff; /* Cyan Neon */
+            color: #00f0ff; 
             text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff, 0 0 40px rgba(0, 240, 255, 0.6);
             -webkit-text-stroke: 0px;
         }
 
-        .lyric-next {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-top: 1.5rem;
-        }
-
-        /* Si el usuario acierta la línea en vivo */
         .lyric-active.success .lyric-word.filled {
-            color: #ff00ea !important; /* Magenta Neon */
+            color: #ff00ea !important;
             text-shadow: 0 0 10px #ff00ea, 0 0 20px #ff00ea, 0 0 40px rgba(255, 0, 234, 0.8) !important;
         }
 
+        .lyric-next {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 1rem;
+        }
+
+        /* */
+        .lyric-prev-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .lyric-prev-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .lyric-prev {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Medallas de desempeño */
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 0 15px currentColor;
+        }
+        .badge-perfect { color: #fbbf24; background: rgba(251,191,36,0.15); border: 1px solid #fbbf24; }
+        .badge-excellent { color: #ff00ea; background: rgba(255,0,234,0.15); border: 1px solid #ff00ea; }
+        .badge-good { color: #00f0ff; background: rgba(0,240,255,0.15); border: 1px solid #00f0ff; }
+        .badge-miss { color: #ef4444; background: rgba(239,68,68,0.15); border: 1px solid #ef4444; box-shadow: none; }
+
+        /* */
         #youtube-player-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 120vw;
-            height: 120vh;
-            transform: translate(-50%, -50%);
-            z-index: -2;
-            pointer-events: none;
+            position: fixed; top: 50%; left: 50%; width: 120vw; height: 120vh;
+            transform: translate(-50%, -50%); z-index: -2; pointer-events: none;
         }
 
         .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle, rgba(15,15,25,0.7) 0%, rgba(5,5,10,0.95) 100%);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(10,10,20,0.6) 0%, rgba(5,5,10,0.95) 100%);
             z-index: -1;
         }
 
@@ -90,66 +115,27 @@
         .idle-show { opacity: 1; transition: opacity 0.5s ease; }
         
         .loader {
-            border: 4px solid rgba(0,240,255,0.1);
-            border-left-color: #00f0ff;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            border: 4px solid rgba(0,240,255,0.1); border-left-color: #00f0ff;
+            border-radius: 50%; width: 60px; height: 60px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Animaciones Flotantes */
         .floating-score {
-            position: absolute;
-            color: #fbbf24;
-            font-size: 3rem;
-            font-weight: 900;
+            position: absolute; color: #fbbf24; font-size: 3rem; font-weight: 900;
             filter: drop-shadow(0 0 15px rgba(251, 191, 36, 1));
             animation: floatUp 1s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none;
-            z-index: 50;
+            pointer-events: none; z-index: 50;
         }
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0) scale(0.5); }
             100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
         }
 
-        .feedback-text {
-            position: absolute;
-            top: 25%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 5rem;
-            font-weight: 900;
-            font-style: italic;
-            text-transform: uppercase;
-            pointer-events: none;
-            z-index: 60;
-            opacity: 0;
-            animation: popInAndFade 1.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popInAndFade {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
-            30% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-            80% { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(-20px); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5) translateY(-50px); }
-        }
-        
-        .feedback-perfect { color: #ffd700; text-shadow: 0 0 20px #ffd700, 0 0 40px #ff8c00; }
-        .feedback-excellent { color: #ff00ea; text-shadow: 0 0 20px #ff00ea, 0 0 40px #ba00ff; }
-        .feedback-good { color: #00f0ff; text-shadow: 0 0 20px #00f0ff, 0 0 40px #0051ff; }
-
-        /* Countdown */
-        #countdown-overlay {
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-        }
+        /* */
+        #countdown-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); }
         .countdown-number {
-            font-size: 15rem;
-            font-weight: 900;
-            color: #00f0ff;
+            font-size: 15rem; font-weight: 900; color: #00f0ff;
             text-shadow: 0 0 40px #00f0ff;
             animation: pulseBeat 1s infinite;
         }
@@ -162,11 +148,12 @@
 </head>
 <body class="h-screen w-screen flex items-center justify-center relative">
 
+    <!-- -->
     <!-- Monitor del Micrófono (Arriba Izquierda) -->
     <div id="mic-monitor" class="hidden absolute top-6 left-8 z-40 glass-panel rounded-xl p-4 w-80 transition-opacity duration-300">
         <div class="flex items-center text-cyan-400 mb-2 border-b border-white/10 pb-2">
             <i class="fas fa-microphone-alt animate-pulse mr-2"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest">Receptor de Voz</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Receptor de Voz (En vivo)</span>
         </div>
         <p id="mic-monitor-text" class="text-gray-300 text-sm italic min-h-[2.5rem]">...</p>
     </div>
@@ -175,38 +162,35 @@
     <div id="hud-panel" class="hidden absolute top-6 right-8 z-40 glass-panel rounded-2xl p-4 flex gap-6">
         <div class="flex flex-col items-center">
             <span class="text-[10px] text-gray-400 uppercase tracking-widest font-black">Score</span>
-            <span id="score-display" class="text-4xl text-cyan-400 font-black drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]">0</span>
+            <span id="score-display" class="text-4xl text-cyan-400 font-black drop-shadow-[0_0_10px_rgba(0,240,255,0.5)] transition-all">0</span>
         </div>
         <div class="w-[2px] bg-white/10"></div>
         <div class="flex flex-col items-center">
             <span class="text-[10px] text-gray-400 uppercase tracking-widest font-black">Combo</span>
-            <span id="combo-display" class="text-4xl text-yellow-400 font-black drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">x1</span>
+            <span id="combo-display" class="text-4xl text-yellow-400 font-black drop-shadow-[0_0_10px_rgba(251,191,36,0.5)] transition-all">x1</span>
         </div>
     </div>
     
     <div id="floating-score-container" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 z-50"></div>
-    <div id="feedback-container" class="absolute inset-0 pointer-events-none overflow-hidden z-50"></div>
 
+    <!-- -->
     <!-- Pantalla de Configuración -->
     <section id="setup-screen" class="glass-panel p-10 rounded-3xl w-full max-w-xl z-10">
         <h1 class="text-5xl font-black mb-2 text-center text-white drop-shadow-[0_0_15px_rgba(0,240,255,0.8)] uppercase italic tracking-tighter">
             Neon<span class="text-cyan-400">Karaoke</span>
         </h1>
-        <p class="text-center text-cyan-200/60 text-xs mb-8 font-bold tracking-widest uppercase">Motor Autónomo LRCLIB</p>
+        <p class="text-center text-cyan-200/60 text-xs mb-8 font-bold tracking-widest uppercase">Motor Autónomo de Letras</p>
         
         <div class="space-y-6">
             <div>
                 <label class="block text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-2 ml-1">Enlace de YouTube</label>
-                <input type="text" id="youtube-url" class="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-cyan-400 transition-colors shadow-inner" placeholder="https://www.youtube.com/watch?v=...">
+                <input type="text" id="youtube-url" class="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-cyan-400 transition-colors shadow-inner" placeholder="Ej: https://www.youtube.com/watch?v=...">
             </div>
-
             <div>
-                <label class="block text-[10px] font-black text-magenta-500 uppercase tracking-widest mb-2 ml-1 text-pink-500">Canción (Si falla auto)</label>
+                <label class="block text-[10px] font-black text-magenta-500 uppercase tracking-widest mb-2 ml-1">Buscar Canción Manual (Opcional)</label>
                 <input type="text" id="manual-query" class="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-pink-500 transition-colors shadow-inner" placeholder="Ej: Luis Miguel La Incondicional">
             </div>
-            
             <div id="error-msg" class="hidden bg-red-900/50 border border-red-500 text-red-200 text-sm p-4 rounded-xl text-center font-bold"></div>
-
             <button id="btn-fetch" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xl py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(0,240,255,0.6)] mt-2 uppercase tracking-widest">
                 Insert Coin (Jugar)
             </button>
@@ -219,6 +203,7 @@
         <p id="loading-text" class="text-2xl font-black text-cyan-400 text-center animate-pulse uppercase tracking-widest">Conectando...</p>
     </section>
 
+    <!-- -->
     <!-- Pantalla Principal de Karaoke -->
     <main id="karaoke-screen" class="hidden w-full h-full relative flex flex-col justify-center items-center">
         <div id="youtube-player-container"></div>
@@ -230,17 +215,27 @@
             </button>
         </div>
 
-        <!-- Pantalla de Cuenta Regresiva (Pausa/Resume) -->
         <div id="countdown-overlay" class="hidden absolute inset-0 flex items-center justify-center z-50">
             <div id="countdown-text" class="countdown-number">3</div>
         </div>
 
+        <!-- Historial y Letras -->
         <div id="lyrics-container" class="text-center w-11/12 max-w-7xl z-10 flex flex-col items-center justify-center h-full pb-24">
+            
+            <!-- Verso Anterior con Medalla -->
+            <div id="prev-lyric-box" class="lyric-prev-container">
+                <span id="prev-lyric-text" class="lyric-prev"></span>
+                <span id="prev-lyric-badge" class="badge hidden"></span>
+            </div>
+
+            <!-- Verso Actual interactivo -->
             <div id="current-lyric" class="lyric-line lyric-active w-full px-4">...</div>
-            <div id="next-lyric" class="lyric-line lyric-next w-full px-4 line-clamp-2 mt-8">...</div>
+            
+            <!-- Siguiente Verso -->
+            <div id="next-lyric" class="lyric-line lyric-next w-full px-4 line-clamp-1">...</div>
         </div>
 
-        <!-- Panel de Control Inferior -->
+        <!-- -->
         <footer id="controls-panel" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 glass-panel rounded-full p-2 flex items-center gap-2 idle-show z-40 w-[95%] max-w-4xl justify-between">
             <div class="flex gap-1">
                 <button id="btn-sync-m5" class="px-3 py-3 bg-white/5 hover:bg-white/10 rounded-full text-xs font-black text-gray-300 transition">-5s</button>
@@ -272,7 +267,7 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        let lrcData = [];
+        //        let lrcData = [];
         let currentLineIndex = -1;
         let player;
         let videoId = "";
@@ -282,7 +277,7 @@
         let score = 0;
         let combo = 1;
         let currentLineMaxPoints = 0; 
-        let lastLineHitRatio = 0; // Para el feedback
+        let lastLineHitRatio = 0;
 
         let lastYTTime = 0;
         let lastPerformanceTime = performance.now();
@@ -298,6 +293,9 @@
             loadTxt: document.getElementById('loading-text'),
             curLyric: document.getElementById('current-lyric'),
             nxtLyric: document.getElementById('next-lyric'),
+            prevBox: document.getElementById('prev-lyric-box'),
+            prevText: document.getElementById('prev-lyric-text'),
+            prevBadge: document.getElementById('prev-lyric-badge'),
             syncDisp: document.getElementById('sync-display'),
             controls: document.getElementById('controls-panel'),
             errorMsg: document.getElementById('error-msg'),
@@ -305,7 +303,6 @@
             scoreDisp: document.getElementById('score-display'),
             comboDisp: document.getElementById('combo-display'),
             floatingContainer: document.getElementById('floating-score-container'),
-            feedbackContainer: document.getElementById('feedback-container'),
             micMonitor: document.getElementById('mic-monitor'),
             micText: document.getElementById('mic-monitor-text'),
             btnPause: document.getElementById('btn-pause'),
@@ -314,44 +311,32 @@
         };
         
         function showError(msg) {
-            ui.errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i> ${msg}`;
+            ui.errorMsg.innerText = msg;
             ui.errorMsg.classList.remove('hidden');
         }
-        function hideError() { ui.errorMsg.classList.add('hidden'); }
 
-        function extractVideoId(url) {
+        //        function extractVideoId(url) {
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
             const match = url.match(regex);
             return match ? match[1] : null;
         }
 
-        async function fetchVideoTitle(vidId) {
-            try {
-                const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vidId}`);
-                const data = await response.json();
-                return data.title || "";
-            } catch (e) { return ""; }
-        }
-
         async function fetchLyricsFromPublicDB(autoTitle, manualQuery) {
             let searchQuery = manualQuery.trim();
             if (!searchQuery) {
-                let cleanTitle = autoTitle.toLowerCase();
-                cleanTitle = cleanTitle.replace(/\([^)]*\)|\[[^\]]*\]/g, ' ');
+                let cleanTitle = autoTitle.replace(/\([^)]*\)|\[[^\]]*\]/g, ' ');
                 const stopWords = ['official', 'video', 'oficial', 'lyrics', 'lyric', 'letra', 'audio', 'remastered', '4k', 'hd', 'feat.', 'ft.', 'remix', 'music'];
                 const regex = new RegExp(`\\b(${stopWords.join('|')})\\b`, 'gi');
-                cleanTitle = cleanTitle.replace(regex, ' ').replace(/[-|&]/g, ' ').replace(/\s{2,}/g, ' ').trim();
-                searchQuery = cleanTitle;
+                searchQuery = cleanTitle.replace(regex, ' ').replace(/[-|&]/g, ' ').replace(/\s{2,}/g, ' ').trim();
             }
             if (!searchQuery) throw new Error("Título confuso. Escribe la canción manualmente.");
 
-            const url = `https://lrclib.net/api/search?q=${encodeURIComponent(searchQuery)}`;
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("Error contactando la base de datos (LRCLIB).");
+            const response = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(searchQuery)}`);
+            if (!response.ok) throw new Error("Error contactando la base de datos.");
             const data = await response.json();
             
             const track = data.find(t => t.syncedLyrics);
-            if (!track) throw new Error(`No se encontró la letra sincronizada. Usa el campo "Canción" para buscar.`);
+            if (!track) throw new Error(`No se encontró la letra sincronizada.`);
             return track.syncedLyrics;
         }
 
@@ -371,9 +356,8 @@
             return result.sort((a, b) => a.time - b.time);
         }
 
-        // --- STREAMING_CHUNK:Preparing YouTube and Execution... ---
-        document.getElementById('btn-fetch').addEventListener('click', async () => {
-            hideError();
+        //        document.getElementById('btn-fetch').addEventListener('click', async () => {
+            ui.errorMsg.classList.add('hidden');
             const url = document.getElementById('youtube-url').value.trim();
             const manualQ = document.getElementById('manual-query').value.trim();
 
@@ -386,12 +370,16 @@
             ui.load.classList.add('flex');
 
             try {
-                ui.loadTxt.innerText = "Cargando Nivel...";
-                let videoTitle = manualQ ? "" : await fetchVideoTitle(videoId);
+                let videoTitle = manualQ;
+                if (!manualQ) {
+                    ui.loadTxt.innerText = "Leyendo título...";
+                    const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+                    const data = await res.json();
+                    videoTitle = data.title || "";
+                }
                 
                 ui.loadTxt.innerText = "Descargando Letras...";
                 const rawLRC = await fetchLyricsFromPublicDB(videoTitle, manualQ);
-                
                 lrcData = parseLRC(rawLRC);
                 if (lrcData.length === 0) throw new Error("Sin marcas de tiempo.");
 
@@ -407,118 +395,31 @@
         function setupYouTubePlayer() {
             document.getElementById('youtube-player-container').innerHTML = '<div id="yt-player"></div>';
             player = new YT.Player('yt-player', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
+                height: '100%', width: '100%', videoId: videoId,
                 playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'modestbranding': 1, 'rel': 0 },
-                events: { 'onReady': onPlayerReady }
+                events: { 'onReady': () => {
+                    ui.load.classList.add('hidden');
+                    ui.load.classList.remove('flex');
+                    ui.karaoke.classList.remove('hidden');
+                    resetGameState();
+                }}
             });
         }
 
-        function onPlayerReady(event) {
-            ui.load.classList.add('hidden');
-            ui.load.classList.remove('flex');
-            ui.karaoke.classList.remove('hidden');
-            
-            syncOffset = 0;
-            score = 0;
-            combo = 1;
-            updateHUD();
-            updateSyncDisplay();
-            
-            currentLineIndex = -1;
-            currentLineMaxPoints = 0;
-            lastLineHitRatio = 0;
-            isPaused = false;
-            
+        //        function resetGameState() {
+            syncOffset = 0; score = 0; combo = 1; updateHUD(); updateSyncDisplay();
+            currentLineIndex = -1; currentLineMaxPoints = 0; lastLineHitRatio = 0; isPaused = false;
             ui.curLyric.innerHTML = "<span class='lyric-word'>¡Prepara</span> <span class='lyric-word'>tu</span> <span class='lyric-word'>voz!</span>";
             ui.nxtLyric.innerText = "Presiona READY";
-        }
-
-        // --- STREAMING_CHUNK:Implementing Pause, Resume & Feedback Logic... ---
-        ui.btnPause.addEventListener('click', () => {
-            if (isCountingDown) return;
-            
-            if (!isPaused) {
-                // Ejecutar Pausa
-                player.pauseVideo();
-                if(recognition) { try { recognition.stop(); } catch(e){} }
-                isPaused = true;
-                ui.btnPause.innerHTML = '<i class="fas fa-play mr-2"></i> Reanudar';
-                ui.btnPause.classList.replace('bg-cyan-600', 'bg-pink-600');
-                ui.btnPause.classList.replace('hover:bg-cyan-500', 'hover:bg-pink-500');
-                ui.btnPause.classList.replace('shadow-[0_0_15px_rgba(0,240,255,0.4)]', 'shadow-[0_0_15px_rgba(255,0,234,0.4)]');
-            } else {
-                // Ejecutar Reanudación (Con Cuenta Regresiva)
-                startCountdown();
-            }
-        });
-
-        function startCountdown() {
-            isCountingDown = true;
-            ui.countdownOverlay.classList.remove('hidden');
-            let count = 3;
-            ui.countdownText.innerText = count;
-            // Forzar reinicio de animación css
-            ui.countdownText.style.animation = 'none';
-            ui.countdownText.offsetHeight; 
-            ui.countdownText.style.animation = 'pulseBeat 1s infinite';
-
-            let timer = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    ui.countdownText.innerText = count;
-                } else {
-                    clearInterval(timer);
-                    ui.countdownOverlay.classList.add('hidden');
-                    isCountingDown = false;
-                    isPaused = false;
-                    
-                    ui.btnPause.innerHTML = '<i class="fas fa-pause mr-2"></i> Pausa';
-                    ui.btnPause.classList.replace('bg-pink-600', 'bg-cyan-600');
-                    ui.btnPause.classList.replace('hover:bg-pink-500', 'hover:bg-cyan-500');
-                    ui.btnPause.classList.replace('shadow-[0_0_15px_rgba(255,0,234,0.4)]', 'shadow-[0_0_15px_rgba(0,240,255,0.4)]');
-                    
-                    // Resetear reloj interno antes de darle play para evitar saltos
-                    lastYTTime = player.getCurrentTime();
-                    lastPerformanceTime = performance.now();
-                    player.playVideo();
-                    if(recognition) { try { recognition.start(); } catch(e){} }
-                }
-            }, 1000);
-        }
-
-        function triggerLineFeedback(ratio) {
-            if (ratio < 0.5) return; // Sin feedback si no llegó al mínimo
-            
-            const fbEl = document.createElement('div');
-            fbEl.className = 'feedback-text ';
-            
-            if (ratio >= 0.99) {
-                fbEl.innerText = "¡PERFECTO! 🌟";
-                fbEl.classList.add('feedback-perfect');
-            } else if (ratio >= 0.70) {
-                fbEl.innerText = "¡EXCELENTE! 🔥";
-                fbEl.classList.add('feedback-excellent');
-            } else {
-                fbEl.innerText = "¡BIEN! 👍";
-                fbEl.classList.add('feedback-good');
-            }
-            
-            ui.feedbackContainer.appendChild(fbEl);
-            setTimeout(() => fbEl.remove(), 1500);
+            ui.prevBox.classList.remove('show');
         }
 
         function updateHUD() {
             ui.scoreDisp.innerText = score;
             ui.comboDisp.innerText = `x${combo}`;
             if (combo === 1 && score > 0) {
-                ui.comboDisp.classList.remove('text-yellow-400');
-                ui.comboDisp.classList.add('text-red-500');
-                setTimeout(() => {
-                    ui.comboDisp.classList.remove('text-red-500');
-                    ui.comboDisp.classList.add('text-yellow-400');
-                }, 500);
+                ui.comboDisp.classList.replace('text-yellow-400', 'text-red-500');
+                setTimeout(() => ui.comboDisp.classList.replace('text-red-500', 'text-yellow-400'), 500);
             }
         }
 
@@ -526,24 +427,33 @@
             const floatEl = document.createElement('div');
             floatEl.className = 'floating-score';
             floatEl.innerText = `+${points}`;
-            const offset = (Math.random() - 0.5) * 200;
-            floatEl.style.left = `calc(50% + ${offset}px)`;
+            floatEl.style.left = `calc(50% + ${(Math.random() - 0.5) * 200}px)`;
             ui.floatingContainer.appendChild(floatEl);
             setTimeout(() => floatEl.remove(), 1000);
         }
 
-        // --- STREAMING_CHUNK:Lyric Interpolation and Rendering... ---
-        document.getElementById('btn-start-karaoke').addEventListener('click', () => {
-            ui.overlay.classList.add('hidden');
-            ui.hud.classList.remove('hidden'); 
-            ui.micMonitor.classList.remove('hidden');
-            player.playVideo();
-            initMicForScoring(); 
+        // Lógica de Medallas para el verso anterior
+        function evaluatePreviousLine(text, ratio) {
+            ui.prevText.innerText = text;
+            ui.prevBadge.className = 'badge'; // reset
             
-            lastYTTime = player.getCurrentTime();
-            lastPerformanceTime = performance.now();
-            syncLoop(); 
-        });
+            if (ratio >= 0.99) {
+                ui.prevBadge.classList.add('badge-perfect');
+                ui.prevBadge.innerText = "Perfecto +300";
+            } else if (ratio >= 0.75) {
+                ui.prevBadge.classList.add('badge-excellent');
+                ui.prevBadge.innerText = "Excelente +200";
+            } else if (ratio >= 0.50) {
+                ui.prevBadge.classList.add('badge-good');
+                ui.prevBadge.innerText = "Bien +100";
+            } else {
+                ui.prevBadge.classList.add('badge-miss');
+                ui.prevBadge.innerText = "Fallo";
+            }
+            
+            ui.prevBadge.classList.remove('hidden');
+            ui.prevBox.classList.add('show');
+        }
 
         function renderCurrentLineWordByWord(text) {
             ui.curLyric.innerHTML = '';
@@ -556,43 +466,41 @@
                 span.className = 'lyric-word';
                 span.innerText = word;
                 ui.curLyric.appendChild(span);
-                
-                if (index < words.length - 1) {
-                    ui.curLyric.appendChild(document.createTextNode(' '));
-                }
+                if (index < words.length - 1) ui.curLyric.appendChild(document.createTextNode(' '));
             });
         }
+
+        //        document.getElementById('btn-start-karaoke').addEventListener('click', () => {
+            ui.overlay.classList.add('hidden'); ui.hud.classList.remove('hidden'); ui.micMonitor.classList.remove('hidden');
+            player.playVideo(); initMicForScoring(); 
+            lastYTTime = player.getCurrentTime(); lastPerformanceTime = performance.now();
+            syncLoop(); 
+        });
 
         function syncLoop() {
             if (!isPaused && player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) {
                 const currentYTTime = player.getCurrentTime();
                 const now = performance.now();
-
-                if (currentYTTime !== lastYTTime) {
-                    lastYTTime = currentYTTime;
-                    lastPerformanceTime = now;
-                }
+                if (currentYTTime !== lastYTTime) { lastYTTime = currentYTTime; lastPerformanceTime = now; }
                 const interpolatedTime = lastYTTime + ((now - lastPerformanceTime) / 1000);
                 const finalTime = interpolatedTime + syncOffset;
                 
                 let newIndex = -1;
                 for (let i = 0; i < lrcData.length; i++) {
-                    if (finalTime >= lrcData[i].time) {
-                        newIndex = i;
-                    } else { break; }
+                    if (finalTime >= lrcData[i].time) newIndex = i; else break;
                 }
 
+                // OPTIMIZACIÓN: Solo actualizar DOM si cambia la línea
                 if (newIndex !== currentLineIndex && newIndex >= 0) {
-                    // Feedback de la línea anterior
+                    
+                    // Evaluar línea anterior y actualizar medalla
                     if (currentLineIndex >= 0) {
-                        if (currentLineMaxPoints > 0) {
-                            combo++;
-                            triggerLineFeedback(lastLineHitRatio);
-                            updateHUD();
-                        } else if (lrcData[currentLineIndex].text.length > 2) {
-                            combo = 1; 
-                            updateHUD();
-                        }
+                        const lineText = lrcData[currentLineIndex].text;
+                        evaluatePreviousLine(lineText, lastLineHitRatio);
+                        
+                        if (lastLineHitRatio < 0.5 && lineText.length > 2) combo = 1; 
+                        else if (lastLineHitRatio >= 0.5) combo++;
+                        updateHUD();
                     }
 
                     currentLineIndex = newIndex;
@@ -603,38 +511,57 @@
                     ui.nxtLyric.innerText = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].text : "";
                 }
 
-                // Llenado (Karaoke Fill)
+                // Relleno progresivo por palabra
                 if (currentLineIndex >= 0) {
                     const lineStart = lrcData[currentLineIndex].time;
                     const lineEnd = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].time : lineStart + 4;
-                    
-                    let progress = 0;
-                    if (finalTime > lineStart && finalTime < lineEnd) {
-                        progress = (finalTime - lineStart) / (lineEnd - lineStart);
-                    } else if (finalTime >= lineEnd) {
-                        progress = 1;
-                    }
+                    let progress = (finalTime - lineStart) / (lineEnd - lineStart);
                     progress = Math.max(0, Math.min(progress, 1));
                     
                     const wordSpans = ui.curLyric.querySelectorAll('.lyric-word');
-                    const totalWords = wordSpans.length;
-                    const wordsToFill = Math.floor(progress * (totalWords + 1)); 
+                    const wordsToFill = Math.floor(progress * (wordSpans.length + 1)); 
 
                     wordSpans.forEach((span, idx) => {
-                        if (idx < wordsToFill) { span.classList.add('filled'); } 
-                        else { span.classList.remove('filled'); }
+                        if (idx < wordsToFill) span.classList.add('filled'); 
+                        else span.classList.remove('filled');
                     });
                 }
             }
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        // --- STREAMING_CHUNK:Interaction Controls and Speech API... ---
-        function updateSyncDisplay() {
-            const sign = syncOffset > 0 ? "+" : "";
-            ui.syncDisp.innerText = `${sign}${syncOffset.toFixed(1)}s`;
-        }
+        //        ui.btnPause.addEventListener('click', () => {
+            if (isCountingDown) return;
+            if (!isPaused) {
+                player.pauseVideo();
+                if(recognition) { try { recognition.stop(); } catch(e){} }
+                isPaused = true;
+                ui.btnPause.innerHTML = '<i class="fas fa-play mr-2"></i> Reanudar';
+                ui.btnPause.className = 'flex-1 px-8 py-3 bg-pink-600 hover:bg-pink-500 rounded-full text-sm font-black text-white shadow-[0_0_15px_rgba(255,0,234,0.4)] transition uppercase tracking-widest flex justify-center items-center';
+            } else {
+                isCountingDown = true;
+                ui.countdownOverlay.classList.remove('hidden');
+                let count = 3; ui.countdownText.innerText = count;
+                ui.countdownText.style.animation = 'none'; ui.countdownText.offsetHeight; ui.countdownText.style.animation = 'pulseBeat 1s infinite';
 
+                let timer = setInterval(() => {
+                    count--;
+                    if (count > 0) ui.countdownText.innerText = count;
+                    else {
+                        clearInterval(timer);
+                        ui.countdownOverlay.classList.add('hidden');
+                        isCountingDown = false; isPaused = false;
+                        ui.btnPause.innerHTML = '<i class="fas fa-pause mr-2"></i> Pausa';
+                        ui.btnPause.className = 'flex-1 px-8 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-full text-sm font-black text-white shadow-[0_0_15px_rgba(0,240,255,0.4)] transition uppercase tracking-widest flex justify-center items-center';
+                        lastYTTime = player.getCurrentTime(); lastPerformanceTime = performance.now();
+                        player.playVideo();
+                        if(recognition) { try { recognition.start(); } catch(e){} }
+                    }
+                }, 1000);
+            }
+        });
+
+        function updateSyncDisplay() { ui.syncDisp.innerText = `${syncOffset > 0 ? "+" : ""}${syncOffset.toFixed(1)}s`; }
         document.getElementById('btn-sync-m5').addEventListener('click', () => { syncOffset -= 5; updateSyncDisplay(); });
         document.getElementById('btn-sync-m').addEventListener('click', () => { syncOffset -= 0.5; updateSyncDisplay(); });
         document.getElementById('btn-sync-p').addEventListener('click', () => { syncOffset += 0.5; updateSyncDisplay(); });
@@ -643,103 +570,68 @@
         document.getElementById('btn-exit').addEventListener('click', () => {
             cancelAnimationFrame(animationFrameId);
             if(player && player.destroy) player.destroy();
-            ui.karaoke.classList.add('hidden');
-            ui.hud.classList.add('hidden');
-            ui.micMonitor.classList.add('hidden');
-            ui.setup.classList.remove('hidden');
-            ui.overlay.classList.remove('hidden');
-            hideError();
+            ui.karaoke.classList.add('hidden'); ui.hud.classList.add('hidden'); ui.micMonitor.classList.add('hidden');
+            ui.setup.classList.remove('hidden'); ui.overlay.classList.remove('hidden');
             if(recognition) recognition.stop();
         });
 
         let idleTimer;
         document.addEventListener('mousemove', () => {
             if (!ui.karaoke.classList.contains('hidden')) {
-                ui.controls.classList.remove('idle-hide');
-                ui.controls.classList.add('idle-show');
+                ui.controls.classList.remove('idle-hide'); ui.controls.classList.add('idle-show');
                 clearTimeout(idleTimer);
-                idleTimer = setTimeout(() => {
-                    ui.controls.classList.remove('idle-show');
-                    ui.controls.classList.add('idle-hide');
-                }, 3500);
+                idleTimer = setTimeout(() => { ui.controls.classList.remove('idle-show'); ui.controls.classList.add('idle-hide'); }, 3500);
             }
         });
 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition;
-
         function initMicForScoring() {
-            if (!SpeechRecognition) {
-                ui.micText.innerText = "Micrófono no soportado.";
-                ui.micText.classList.add("text-red-400");
-                return;
-            }
-            
+            if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) return;
             try {
-                recognition = new SpeechRecognition();
-                recognition.lang = 'es-ES';
-                recognition.continuous = true;
-                recognition.interimResults = true; 
-
-                const getCleanWordsArray = (str) => {
-                    const cleanStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
-                    return cleanStr.split(/\s+/).filter(w => w.length > 0);
-                };
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'es-ES'; recognition.continuous = true; recognition.interimResults = true; 
+                
+                const cleanStr = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase().split(/\s+/).filter(w=>w.length>0);
 
                 recognition.onresult = (event) => {
-                    if (isPaused || isCountingDown) return;
-
+                    if (isPaused || isCountingDown || currentLineIndex < 0) return;
                     let transcript = "";
-                    for (let i = Math.max(0, event.results.length - 3); i < event.results.length; ++i) {
-                        transcript += event.results[i][0].transcript;
-                    }
+                    for (let i = Math.max(0, event.results.length - 3); i < event.results.length; ++i) transcript += event.results[i][0].transcript;
                     
                     ui.micText.innerText = `"${transcript.trim()}"`;
                     ui.micMonitor.classList.remove('opacity-0');
-                    
                     clearTimeout(micMonitorTimeout);
                     micMonitorTimeout = setTimeout(() => { ui.micText.innerText = "..."; }, 2500);
 
-                    if (currentLineIndex < 0 || !lrcData[currentLineIndex]) return;
-                    
-                    const saidWords = getCleanWordsArray(transcript);
-                    const targetWords = getCleanWordsArray(lrcData[currentLineIndex].text);
+                    const saidWords = cleanStr(transcript);
+                    const targetWords = cleanStr(lrcData[currentLineIndex].text);
                     if (targetWords.length === 0) return;
 
                     let matchCount = 0;
-                    targetWords.forEach(targetWord => {
-                        if (saidWords.includes(targetWord)) matchCount++;
-                    });
-
-                    lastLineHitRatio = matchCount / targetWords.length;
+                    targetWords.forEach(w => { if (saidWords.includes(w)) matchCount++; });
                     
-                    if (lastLineHitRatio >= 0.5) {
-                        ui.curLyric.classList.add('success'); 
-                        
-                        const basePoints = 100 + ((lastLineHitRatio - 0.5) / 0.5) * 200;
-                        const totalPossiblePointsForLine = Math.round(basePoints) * combo;
-                        const incrementalPoints = totalPossiblePointsForLine - currentLineMaxPoints;
-                        
-                        if (incrementalPoints > 0) {
-                            score += incrementalPoints;
-                            currentLineMaxPoints = totalPossiblePointsForLine; 
-                            showFloatingScore(incrementalPoints);
-                            updateHUD();
-                        }
+                    let ratio = matchCount / targetWords.length;
+                    if (ratio > lastLineHitRatio) lastLineHitRatio = ratio;
+
+                    let base = 0;
+                    if (lastLineHitRatio >= 0.99) base = 300;
+                    else if (lastLineHitRatio >= 0.75) base = 200;
+                    else if (lastLineHitRatio >= 0.5) base = 100;
+
+                    let totalPossible = base * combo;
+                    let incremental = totalPossible - currentLineMaxPoints;
+                    
+                    if (incremental > 0) {
+                        score += incremental;
+                        currentLineMaxPoints = totalPossible;
+                        showFloatingScore(incremental);
+                        updateHUD();
+                        ui.curLyric.classList.add('success');
                     }
                 };
                 
-                recognition.onend = () => { 
-                    // Reiniciar el mic solo si no estamos pausados y seguimos en el karaoke
-                    if (!ui.karaoke.classList.contains('hidden') && !isPaused && !isCountingDown) {
-                        try { recognition.start(); } catch(e){} 
-                    }
-                };
-                
+                recognition.onend = () => { if (!ui.karaoke.classList.contains('hidden') && !isPaused && !isCountingDown) try { recognition.start(); } catch(e){} };
                 recognition.start(); 
-            } catch(e) {
-                ui.micText.innerText = "Permisos de micrófono denegados.";
-            }
+            } catch(e) {}
         }
     </script>
 </body>
