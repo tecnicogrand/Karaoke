@@ -390,11 +390,23 @@
 
         async function fetchLyricsFromGemini(title, apiKey) {
             const prompt = `Devuelve la letra de "${title}" en formato LRC puro (ejemplo: [00:15.22] Línea de la canción). No incluyas markdown, introducciones ni comentarios. Solo texto LRC. Tu respuesta debe estar dentro de un campo 'text' en formato JSON.`;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+            
+            // La URL base del modelo más estable actual
+            let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+            let headers = { 'Content-Type': 'application/json' };
+
+            // El sistema ahora detecta qué tipo de credencial estás usando
+            if (apiKey.startsWith('AIza')) {
+                // Si es una API Key normal, va en el enlace
+                url += `?key=${apiKey}`;
+            } else {
+                // Si es un Token OAuth (AQ.), se envía como protocolo de seguridad Bearer
+                headers['Authorization'] = `Bearer ${apiKey}`;
+            }
             
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify({ 
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: { responseMimeType: "application/json" }
@@ -403,7 +415,7 @@
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Error de Google AI: ${errorData.error?.message || 'Revisa tu clave API'}`);
+                throw new Error(`Error de Google AI: ${errorData.error?.message || 'Revisa tu clave API o Token'}`);
             }
             
             const data = await response.json();
