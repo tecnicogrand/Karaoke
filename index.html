@@ -267,7 +267,8 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        //        let lrcData = [];
+        let lrcData = [];
+        let recognition = null;
         let currentLineIndex = -1;
         let player;
         let videoId = "";
@@ -315,7 +316,7 @@
             ui.errorMsg.classList.remove('hidden');
         }
 
-        //        function extractVideoId(url) {
+        function extractVideoId(url) {
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
             const match = url.match(regex);
             return match ? match[1] : null;
@@ -356,7 +357,7 @@
             return result.sort((a, b) => a.time - b.time);
         }
 
-        //        document.getElementById('btn-fetch').addEventListener('click', async () => {
+        document.getElementById('btn-fetch').addEventListener('click', async () => {
             ui.errorMsg.classList.add('hidden');
             const url = document.getElementById('youtube-url').value.trim();
             const manualQ = document.getElementById('manual-query').value.trim();
@@ -406,7 +407,7 @@
             });
         }
 
-        //        function resetGameState() {
+        function resetGameState() {
             syncOffset = 0; score = 0; combo = 1; updateHUD(); updateSyncDisplay();
             currentLineIndex = -1; currentLineMaxPoints = 0; lastLineHitRatio = 0; isPaused = false;
             ui.curLyric.innerHTML = "<span class='lyric-word'>¡Prepara</span> <span class='lyric-word'>tu</span> <span class='lyric-word'>voz!</span>";
@@ -470,7 +471,7 @@
             });
         }
 
-        //        document.getElementById('btn-start-karaoke').addEventListener('click', () => {
+        document.getElementById('btn-start-karaoke').addEventListener('click', () => {
             ui.overlay.classList.add('hidden'); ui.hud.classList.remove('hidden'); ui.micMonitor.classList.remove('hidden');
             player.playVideo(); initMicForScoring(); 
             lastYTTime = player.getCurrentTime(); lastPerformanceTime = performance.now();
@@ -530,7 +531,7 @@
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        //        ui.btnPause.addEventListener('click', () => {
+        ui.btnPause.addEventListener('click', () => {
             if (isCountingDown) return;
             if (!isPaused) {
                 player.pauseVideo();
