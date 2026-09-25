@@ -353,7 +353,7 @@
             aiSetup.classList.toggle('hidden');
         });
 
-        //        function extractVideoId(url) {
+        function extractVideoId(url) {
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
             const match = url.match(regex);
             return match ? match[1] : null;
@@ -434,7 +434,7 @@
             return result.sort((a, b) => a.time - b.time);
         }
 
-        //        document.getElementById('btn-fetch').addEventListener('click', async () => {
+        document.getElementById('btn-fetch').addEventListener('click', async () => {
             await startKaraokeProcess(false);
         });
 
@@ -481,7 +481,7 @@
             }
         }
 
-        //        function setupYouTubePlayer() {
+        function setupYouTubePlayer() {
             document.getElementById('youtube-player-container').innerHTML = '<div id="yt-player"></div>';
             player = new YT.Player('yt-player', {
                 height: '100%', width: '100%', videoId: videoId,
@@ -636,7 +636,7 @@
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        //        ui.btnPause.addEventListener('click', () => {
+        ui.btnPause.addEventListener('click', () => {
             if (isCountingDown) return;
             if (!isPaused) {
                 player.pauseVideo();
