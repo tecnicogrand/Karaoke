@@ -163,11 +163,12 @@
             <!-- Selector de Micrófono -->
             <div class="group">
                 <label class="block text-xs md:text-sm text-yellow-200/70 mb-2 font-bold ml-2 uppercase tracking-widest">
-                    <i class="fas fa-microphone mr-1"></i> Entrada de Audio
+                    <i class="fas fa-microphone mr-1"></i> Entrada de Audio (Selector)
                 </label>
                 <select id="mic-select" class="w-full bg-slate-950/80 border border-slate-700/50 rounded-2xl px-5 py-4 text-slate-200 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-all text-sm md:text-base appearance-none cursor-pointer shadow-inner group-hover:border-slate-600">
                     <option value="">Cargando dispositivos de audio...</option>
                 </select>
+                <p class="text-[10px] text-slate-400 mt-2 italic">*Si el navegador no obedece el selector, usa el ícono del candado 🔒 arriba a la izquierda.</p>
             </div>
 
             <!-- Modo VDJ (Optimizado) -->
@@ -178,7 +179,7 @@
                 </div>
                 <div class="ml-4">
                     <span class="text-white font-bold text-sm md:text-base flex items-center gap-2"><i class="fas fa-sliders-h text-cyan-400"></i> Modo DJ Pro (Virtual DJ / Pioneer)</span>
-                    <span class="text-xs text-slate-400 block mt-0.5">Apaga el micrófono y libera recursos del PC para que no haya trabas.</span>
+                    <span class="text-xs text-slate-400 block mt-0.5">Apaga el motor de voz y libera recursos de tu PC para que no haya trabas.</span>
                 </div>
             </div>
             
@@ -187,7 +188,7 @@
                 Preparar Escenario
             </button>
             <button id="btn-help" class="w-full text-slate-400 hover:text-white font-medium py-2 transition-colors text-xs flex items-center justify-center gap-2 mt-2">
-                <i class="fas fa-question-circle"></i> Ayuda de conexión (Cableado)
+                <i class="fas fa-question-circle"></i> Ayuda de conexión (Para Sistema BOSE)
             </button>
             
             <div id="setup-error" class="text-red-300 text-sm md:text-base font-bold text-center hidden mt-2 bg-red-950/50 p-4 rounded-xl border border-red-500/30"></div>
@@ -198,14 +199,14 @@
     <div id="help-modal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-md">
         <div class="glass-panel p-8 rounded-3xl max-w-2xl w-full border-cyan-500/30 shadow-2xl relative">
             <button id="btn-close-help" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
-            <h2 class="text-2xl font-black text-cyan-400 mb-2"><i class="fas fa-plug"></i> Conexión para Sistema BOSE T4S</h2>
-            <p class="text-slate-300 text-sm mb-4 leading-relaxed">Para que esta página escuche la voz de tus cantantes sin retrasos:</p>
+            <h2 class="text-2xl font-black text-cyan-400 mb-2"><i class="fas fa-plug"></i> Conexión Mágica para BOSE T4S</h2>
+            <p class="text-slate-300 text-sm mb-4 leading-relaxed">Sigue estos 3 pasos para que la PC escuche la voz limpia y perfecta sin latencia:</p>
             <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3 text-sm text-slate-200">
-                <p>1. Conecta un <b>Cable USB extra</b> desde el puerto "PC" de tu consola BOSE a tu Laptop.</p>
-                <p>2. En la pantalla de la BOSE, gira a <b>Prefs > USB to PC</b> y pon ambos canales en <b>Master</b>.</p>
-                <p>3. Regresa a esta página, abre el Selector de Micrófono (arriba) y elige <b>Bose T4S</b>.</p>
+                <p>1. Conecta un <b>Cable USB extra</b> desde el puerto trasero "PC" de tu BOSE T4S hacia tu Laptop.</p>
+                <p>2. En la pantalla de tu mezcladora BOSE: Gira a <b>Prefs > USB to PC</b>. Asegúrate de que Left y Right estén en <b>Master</b>.</p>
+                <p>3. En Windows, ve a Configuración de Sonido y selecciona <b>Bose T4S</b> como tu micrófono predeterminado.</p>
             </div>
-            <p class="text-xs text-yellow-400 mt-4"><i class="fas fa-info-circle"></i> Tu bocina BOSE principal seguirá sonando perfecta por los cables normales.</p>
+            <p class="text-xs text-yellow-400 mt-4"><i class="fas fa-info-circle"></i> Tu bocina BOSE principal conectada con los cables redondos seguirá sonando perfecto en tu sala.</p>
         </div>
     </div>
 
@@ -329,7 +330,6 @@
     <!-- API DE YOUTUBE -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        /* VARIABLES GLOBALES OPTIMIZADAS */
         let lrcData = [];
         let currentLineIndex = -1;
         let player;
@@ -345,8 +345,6 @@
         let wordsSaidInLine = new Set();
         let totalLines = 0;
         let linesHit = 0;
-
-        // Variables de caché para DOM de alto rendimiento
         let cachedSpans = []; 
 
         /* REFERENCIAS DOM */
@@ -375,10 +373,8 @@
         const trackingContainer = document.getElementById('tracking-line-container');
         const trackingFill = document.getElementById('tracking-line-fill');
 
-        /* CARGA DE MICRÓFONOS EN EL SELECTOR */
         async function loadMicrophones() {
             try {
-                // Pedir permiso rápido para ver la lista real
                 await navigator.mediaDevices.getUserMedia({ audio: true });
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const audioInputs = devices.filter(device => device.kind === 'audioinput');
@@ -401,7 +397,6 @@
         }
         window.addEventListener('load', loadMicrophones);
 
-        /* UTILIDADES MATEMÁTICAS / STRING */
         function showError(msg) {
             setupError.innerText = msg;
             setupError.classList.remove('hidden');
@@ -426,7 +421,33 @@
             }
         }
 
-        /* PARSER LRC */
+        // ALGORITMO DE DISTANCIA LEVENSHTEIN (Fuzzy Match / Similitud)
+        function getSimilarity(s1, s2) {
+            let longer = s1; let shorter = s2;
+            if (s1.length < s2.length) { longer = s2; shorter = s1; }
+            let longerLength = longer.length;
+            if (longerLength == 0) return 1.0;
+            
+            let costs = new Array();
+            for (let i = 0; i <= longer.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= shorter.length; j++) {
+                    if (i == 0) costs[j] = j;
+                    else {
+                        if (j > 0) {
+                            let newValue = costs[j - 1];
+                            if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                                newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                            costs[j - 1] = lastValue;
+                            lastValue = newValue;
+                        }
+                    }
+                }
+                if (i > 0) costs[shorter.length] = lastValue;
+            }
+            return (longerLength - costs[shorter.length]) / parseFloat(longerLength);
+        }
+
         function parseLRC(lrcText) {
             const lines = lrcText.split('\n');
             const result = [];
@@ -449,7 +470,6 @@
             return result.sort((a, b) => a.time - b.time);
         }
 
-        /* BUSQUEDA DE LETRAS (Plan A: LRCLIB) */
         async function fetchLyrics(title) {
             const cleanTitle = title
                 .replace(/\([^)]*\)|\[[^\]]*\]/g, '') 
@@ -465,7 +485,6 @@
             return track.syncedLyrics;
         }
 
-        /* INICIO DEL FLUJO PRINCIPAL */
         document.getElementById('btn-fetch').addEventListener('click', async () => {
             setupError.classList.add('hidden');
             const url = document.getElementById('youtube-url').value.trim();
@@ -491,7 +510,6 @@
 
                 document.getElementById('loading-text').innerText = "Armando escenario dorado...";
                 
-                // Configurar Interfaz según Modo
                 if(isVdjModeActive) {
                     hudPanel.classList.add('hidden');
                     micDebugPanel.classList.add('hidden');
@@ -512,7 +530,6 @@
             }
         });
 
-        /* REPRODUCTOR DE YOUTUBE */
         function setupYouTubePlayer() {
             document.getElementById('youtube-player-container').innerHTML = '<div id="yt-player"></div>';
             player = new YT.Player('yt-player', {
@@ -528,7 +545,6 @@
             loadingScreen.classList.remove('flex');
             karaokeScreen.classList.remove('hidden');
             
-            // Reset Variables
             syncOffset = 0; currentLineIndex = -1; score = 0; combo = 1; maxCombo = 1;
             totalLines = lrcData.length; linesHit = 0; 
             scoreDisplay.innerText = "0"; comboDisplay.innerText = "COMBO x1";
@@ -539,13 +555,13 @@
             prevLyricText.innerText = ""; prevLyricBadge.innerHTML = "";
             cachedSpans = [];
             trackingContainer.classList.add('opacity-0');
+            startOverlay.classList.remove('hidden');
         }
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) showResults();
         }
 
-        /* BOTÓN COMENZAR Y CONTEO 3-2-1 */
         document.getElementById('btn-start-karaoke').addEventListener('click', () => {
             startOverlay.classList.add('hidden');
             countdownScreen.classList.remove('hidden');
@@ -562,14 +578,12 @@
                     countdownScreen.classList.add('hidden');
                     player.playVideo();
                     if(!isVdjModeActive) initMicForScoring(); 
-                    // Iniciar bucle gráfico optimizado
                     if(animationFrameId) cancelAnimationFrame(animationFrameId);
                     animationFrameId = requestAnimationFrame(syncLoop); 
                 }
             }, 1000);
         });
 
-        /* FUNCIÓN DE RENDERIZADO AL CAMBIAR DE LÍNEA */
         function renderLine(lineData) {
             currentLyricEl.innerHTML = '';
             lineData.words.forEach(word => {
@@ -578,11 +592,9 @@
                 currentLyricEl.appendChild(span);
                 currentLyricEl.appendChild(document.createTextNode(' '));
             });
-            // CACHE IMPORTANTE: Guarda los spans para no saturar la PC en el bucle
             cachedSpans = Array.from(currentLyricEl.querySelectorAll('span'));
         }
 
-        /* EVALUACIÓN DE PUNTOS (Motor Tolerante "Fiesta") */
         function evaluateLine(indexToEval) {
             if (indexToEval < 0 || isVdjModeActive) return;
             
@@ -592,12 +604,15 @@
             const hitCount = wordsSaidInLine.size;
             let percent = (hitCount / targetWords) * 100;
             
-            // Regla "Modo Fiesta": Si dice algo en líneas cortas, lo vale todo.
+            // Tolerancia Alta para sistema BOSE y ruido
             if (targetWords <= 3 && hitCount >= 1) {
                 percent = 100;
-            } else if (hitCount >= 2 && targetWords > 3) {
-                // Bonificación si atinó al menos 2 palabras en el ruido
-                percent += 30; 
+            } else if (percent >= 40) {
+                // Si atinaste al menos 40% de las palabras, lo tomamos como Perfecto por el ruido
+                percent = 100;
+            } else if (hitCount >= 1) {
+                // Si al menos atinó a algo
+                percent = 50;
             }
 
             let points = 0;
@@ -622,7 +637,7 @@
                 points = 50 * combo;
                 badgeHtml = `<i class="fas fa-thumbs-up text-blue-100"></i> BIEN`;
                 badgeClass += "badge-good";
-                combo = 1; // Resetea combo
+                combo = 1; 
                 linesHit++;
                 createFloatingText(`+${points}`);
             } else {
@@ -655,7 +670,6 @@
             setTimeout(() => el.remove(), 1200);
         }
 
-        /* BUCLE PRINCIPAL (OPTIMIZADO PARA 60FPS) */
         function syncLoop() {
             if (isPaused || !player || typeof player.getCurrentTime !== 'function') {
                 animationFrameId = requestAnimationFrame(syncLoop);
@@ -664,13 +678,10 @@
 
             const currentTime = player.getCurrentTime() + syncOffset;
             
-            // Buscar índice actual matemáticamente
             let newIndex = lrcData.findIndex(line => line.time > currentTime) - 1;
             if (newIndex === -2) newIndex = lrcData.length - 1; 
 
-            // ¿Cambió la línea?
             if (newIndex !== currentLineIndex) {
-                // Evaluar la línea que acaba de pasar
                 if (currentLineIndex >= 0) {
                     evaluateLine(currentLineIndex);
                     prevLyricText.innerText = lrcData[currentLineIndex].text;
@@ -679,24 +690,20 @@
                 currentLineIndex = newIndex;
                 wordsSaidInLine.clear();
                 
-                // Preparar la nueva línea
                 if (currentLineIndex >= 0) {
                     renderLine(lrcData[currentLineIndex]);
                     nextLyricEl.innerText = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].text : "";
                 }
             }
 
-            // Animación de relleno suave fluido
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const startTime = lrcData[currentLineIndex].time;
                 const endTime = lrcData[currentLineIndex + 1].time;
                 const duration = endTime - startTime;
                 const elapsed = currentTime - startTime;
                 
-                // Limitar progreso entre 0 y 1
                 const progress = Math.max(0, Math.min(elapsed / duration, 1));
                 
-                // Aplicar estilos a la caché (Ultra rápido)
                 if(cachedSpans.length > 0) {
                     const exactProgress = progress * cachedSpans.length;
                     const currentSpanIndex = Math.floor(exactProgress);
@@ -704,16 +711,16 @@
                     for(let i=0; i<cachedSpans.length; i++) {
                         let span = cachedSpans[i];
                         
-                        // EFECTO VISUAL DE ACIERTO EN TIEMPO REAL
+                        // Si la palabra fue acertada, se pinta de verde
                         let isHit = wordsSaidInLine.has(i);
                         let hitShadow = isHit ? ' drop-shadow(0 0 20px #4ade80)' : '';
-                        let baseColor = isHit ? '#4ade80' : '#fbbf24'; // Cambia a Verde brillante si acertó
+                        let baseColor = isHit ? '#4ade80' : '#fbbf24'; 
 
                         if (i < currentSpanIndex) {
                             span.style.background = baseColor;
                             span.style.webkitBackgroundClip = 'text';
                             span.style.webkitTextFillColor = 'transparent';
-                            span.style.transform = isHit ? 'scale(1.12)' : 'scale(1.08)'; // Salta un poco más si acertó
+                            span.style.transform = isHit ? 'scale(1.12)' : 'scale(1.08)';
                             span.style.filter = `drop-shadow(0 0 12px rgba(251, 191, 36, 0.7))${hitShadow}`;
                         } else if (i === currentSpanIndex) {
                             const fillPct = (exactProgress - currentSpanIndex) * 100;
@@ -732,7 +739,6 @@
                     }
                 }
 
-                // Barra inferior
                 trackingContainer.classList.remove('opacity-0');
                 trackingFill.style.width = `${progress * 100}%`;
                 
@@ -743,7 +749,6 @@
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        /* MOTOR DE RECONOCIMIENTO DE VOZ */
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
@@ -757,7 +762,7 @@
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.continuous = true;
-            recognition.interimResults = true; // Fundamental para detectar ruido en vivo
+            recognition.interimResults = true;
 
             const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
 
@@ -768,7 +773,7 @@
 
             recognition.onerror = (e) => {
                 if(e.error === 'not-allowed') {
-                    micDebugText.innerText = `🔴 Permiso denegado. Haz clic en el candado 🔒`;
+                    micDebugText.innerText = `🔴 Permiso denegado. Candadito 🔒`;
                 } else {
                     micDebugText.innerText = `🔴 Error: ${e.error}`;
                 }
@@ -794,8 +799,8 @@
                     
                     saidWords.forEach(sWord => {
                         if (sWord.length < 2) return;
-                        // Regla súper tolerante: Si coinciden las primeras 3 letras o es parte de la palabra
-                        if (sWord.includes(cleanTarget) || cleanTarget.includes(sWord) || sWord.substring(0,3) === cleanTarget.substring(0,3)) {
+                        // Algoritmo Levenshtein: Si la similitud es mayor a 55% o hay coincidencia parcial
+                        if (getSimilarity(cleanTarget, sWord) >= 0.55 || sWord.includes(cleanTarget) || cleanTarget.includes(sWord)) {
                             wordsSaidInLine.add(tIndex);
                         }
                     });
@@ -811,7 +816,6 @@
             try { recognition.start(); } catch(e){ }
         }
 
-        /* PANTALLA FINAL Y CONTROLES */
         function showResults() {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             karaokeScreen.classList.add('hidden');
@@ -874,6 +878,7 @@
             if(recognition) try{ recognition.stop(); }catch(e){}
             karaokeScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
+            startOverlay.classList.remove('hidden');
         });
 
     </script>
