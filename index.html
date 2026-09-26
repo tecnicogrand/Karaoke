@@ -703,25 +703,31 @@
                     
                     for(let i=0; i<cachedSpans.length; i++) {
                         let span = cachedSpans[i];
+                        
+                        // EFECTO VISUAL DE ACIERTO EN TIEMPO REAL
+                        let isHit = wordsSaidInLine.has(i);
+                        let hitShadow = isHit ? ' drop-shadow(0 0 20px #4ade80)' : '';
+                        let baseColor = isHit ? '#4ade80' : '#fbbf24'; // Cambia a Verde brillante si acertó
+
                         if (i < currentSpanIndex) {
-                            span.style.background = '#fbbf24';
+                            span.style.background = baseColor;
                             span.style.webkitBackgroundClip = 'text';
                             span.style.webkitTextFillColor = 'transparent';
-                            span.style.transform = 'scale(1.08)';
-                            span.style.filter = 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.7))';
+                            span.style.transform = isHit ? 'scale(1.12)' : 'scale(1.08)'; // Salta un poco más si acertó
+                            span.style.filter = `drop-shadow(0 0 12px rgba(251, 191, 36, 0.7))${hitShadow}`;
                         } else if (i === currentSpanIndex) {
                             const fillPct = (exactProgress - currentSpanIndex) * 100;
-                            span.style.background = `linear-gradient(to right, #fbbf24 ${fillPct}%, white ${fillPct}%)`;
+                            span.style.background = `linear-gradient(to right, ${baseColor} ${fillPct}%, white ${fillPct}%)`;
                             span.style.webkitBackgroundClip = 'text';
                             span.style.webkitTextFillColor = 'transparent';
                             span.style.transform = `scale(${1 + (0.08 * (fillPct/100))})`;
-                            span.style.filter = `drop-shadow(0 0 ${12 * (fillPct/100)}px rgba(251, 191, 36, 0.7))`;
+                            span.style.filter = `drop-shadow(0 0 ${12 * (fillPct/100)}px rgba(251, 191, 36, 0.7))${hitShadow}`;
                         } else {
                             span.style.background = 'white';
                             span.style.webkitBackgroundClip = 'text';
                             span.style.webkitTextFillColor = 'transparent';
-                            span.style.transform = 'scale(1)';
-                            span.style.filter = 'none';
+                            span.style.transform = isHit ? 'scale(1.1)' : 'scale(1)';
+                            span.style.filter = isHit ? 'drop-shadow(0 0 15px #4ade80)' : 'none';
                         }
                     }
                 }
