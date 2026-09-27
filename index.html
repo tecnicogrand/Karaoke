@@ -190,10 +190,10 @@
             <div id="setup-error" class="text-red-400 text-sm font-bold text-center hidden mt-2 bg-red-950/30 p-3 rounded-lg border border-red-500/20"></div>
         </div>
 
-        <!-- INDICADOR DE VERSIÓN ACTUALIZADO A v0.0 -->
+        <!-- INDICADOR DE VERSIÓN REINICIADO -->
         <div class="mt-8 text-center flex flex-col items-center justify-center gap-2">
             <div class="flex items-center gap-2 text-slate-500/60 font-bold uppercase tracking-[0.2em] font-mono text-[10px]">
-                <span>Build v0.0 (Core Engine)</span>
+                <span>Build v0.1 (Motor de Voz Base)</span>
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -325,7 +325,6 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // ESTADO GLOBAL DE LA APLICACIÓN
         let lrcData = [];
         let currentLineIndex = -1;
         let currentActiveWordIndex = 0; 
@@ -372,7 +371,7 @@
             liveTranscript: document.getElementById('live-transcript')
         };
 
-        // Función de Normalización (Quita acentos y pasa a minúsculas)
+        // Función de Normalización (Quita acentos y signos, solo letras minúsculas)
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
         
         function showError(msg) { 
@@ -514,7 +513,7 @@
                     clearInterval(countInterval);
                     DOM.countdownScreen.classList.add('hidden');
                     player.playVideo();
-                    initMicForScoring(); 
+                    initMicForScoring(); // Encendemos el motor base de voz
                     if(animationFrameId) cancelAnimationFrame(animationFrameId);
                     animationFrameId = requestAnimationFrame(syncLoop); 
                 }
@@ -524,6 +523,7 @@
         function renderLine(lineData) {
             DOM.currentLyric.innerHTML = '';
             
+            // Pre-procesamos las palabras objetivo de esta línea para el motor de voz (limpiando tildes)
             normalizedTargetWords = lineData.words.map(w => normalize(w));
 
             lineData.words.forEach(word => {
@@ -551,7 +551,7 @@
 
             if (newIndex !== currentLineIndex) {
                 if (currentLineIndex >= 0) {
-                    // Auditoría de combo 
+                    // Verificamos si se cantó al menos la mitad de la línea anterior para no romper combo
                     const prevLine = lrcData[currentLineIndex];
                     const hitRatio = wordsSaidInLine.size / prevLine.words.length;
                     
@@ -591,6 +591,7 @@
                 const totalSilenceDuration = nextLine.time - (currentLine.time + estimatedSingingDuration);
                 const isCurrentlyInSilence = timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 0;
 
+                // Mostrar intermedio musical si el silencio es mayor a 3 segundos
                 if (totalSilenceDuration >= 3.0 && isCurrentlyInSilence) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.max(0, Math.ceil(timeToNextLine));
@@ -676,12 +677,8 @@
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        // -------------------------------------------------------------
-        // MOTOR DE RECONOCIMIENTO DE VOZ - VERSIÓN 0.0 (Core Engine)
-        // -------------------------------------------------------------
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
-        let recognitionRestartTimeout;
         let isRecognizing = false; 
 
         function initMicForScoring() {
@@ -693,61 +690,70 @@
             recognition = new SpeechRecognition();
             recognition.lang = 'es-MX'; 
             recognition.continuous = true; 
-            recognition.interimResults = true;
-            recognition.maxAlternatives = 1; 
+            // Necesitamos interimResults en true para recibir los datos de inmediato mientras el usuario habla.
+            recognition.interimResults = true; 
 
             recognition.onstart = () => { isRecognizing = true; };
 
             recognition.onerror = (event) => {
-                if (event.error === 'not-allowed' || event.error === 'audio-capture') {
+                // Errores de red o de permisos cancelan el flag
+                if (event.error === 'not-allowed' || event.error === 'audio-capture' || event.error === 'network') {
                     isRecognizing = false; 
                 }
             };
 
             recognition.onresult = (event) => {
-                // Si la canción está pausada o no ha empezado la letra, ignoramos
+                // Si la canción está pausada o no ha empezado, no procesar voz
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // 1. Obtener EXACTAMENTE el texto más reciente que Chrome escuchó
-                let latestResultIndex = event.results.length - 1;
-                let spokenRaw = event.results[latestResultIndex][0].transcript.trim();
+                // 1. Tomamos ÚNICAMENTE lo que Chrome acaba de capturar en este instante exacto.
+                // Combinamos todos los resultados recientes de este evento para no perder nada.
+                let spokenRaw = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    spokenRaw += event.results[i][0].transcript + " ";
+                }
+                spokenRaw = spokenRaw.trim();
                 
                 if (!spokenRaw) return;
 
-                // 2. Imprimirlo directamente en el monitor negro (Sin lag)
+                // 2. Lo mostramos inmediatamente en el Monitor de Voz
                 if (isTranscriptVisible) {
                     DOM.liveTranscript.innerText = spokenRaw;
                 }
 
-                // 3. Limpiar las palabras habladas para compararlas
+                // 3. Normalizamos lo que dijiste (quitamos tildes, signos y mayúsculas)
                 let normalizedSpoken = normalize(spokenRaw);
+                
+                // Lo convertimos en una lista de palabras sueltas.
                 let spokenArray = normalizedSpoken.split(/\s+/);
 
-                // 4. Comparación Nivel 1 (Exactitud Pura)
+                // 4. EL CEREBRO BASE: Recorremos las palabras de la letra de la canción (target)
                 for (let i = 0; i < normalizedTargetWords.length; i++) {
-                    // Si ya le atinamos a esta palabra antes, la saltamos
+                    // Si ya te dimos punto por esta palabra antes, la saltamos.
                     if (wordsSaidInLine.has(i)) continue; 
                     
                     let targetWord = normalizedTargetWords[i];
                     
-                    // Comparamos: ¿El arreglo de lo que dije incluye la palabra exacta de la letra?
+                    // ¿Lo que dijiste incluye de forma EXACTA la palabra de la canción?
                     if (spokenArray.includes(targetWord)) {
-                        processHit(i);
+                        processHit(i); // ¡Punto!
                     }
                 }
             };
             
+            // Si el micrófono se apaga por seguridad de Chrome, lo volvemos a encender
             recognition.onend = () => { 
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
-                    clearTimeout(recognitionRestartTimeout);
-                    recognitionRestartTimeout = setTimeout(() => { 
-                        if(!isRecognizing) { try { recognition.start(); } catch(e){} }
-                    }, 150);
+                    setTimeout(() => { 
+                        if(!isRecognizing) { 
+                            try { recognition.start(); } catch(e){} 
+                        }
+                    }, 200);
                 }
             };
             
-            try { recognition.start(); } catch(e){ console.log("Mic ya encendido"); }
+            try { recognition.start(); } catch(e){ console.log("Micrófono ya encendido"); }
         }
 
         function breakCombo() {
