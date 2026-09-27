@@ -727,62 +727,33 @@
                 }
             };
 
-            // 🚀 MOTOR ZERO-LATENCY v5.0
+            // 🧱 MOTOR BÁSICO NIVEL 1 (Desde cero)
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // 1. SOLUCIÓN LAG DE TEXTO: Tomar SOLO el bloque más reciente en vez de concatenar todo el historial
-                let currentSpokenChunk = "";
-                // Leemos solo los resultados más recientes para no asfixiar el CPU con textos kilométricos
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    currentSpokenChunk += event.results[i][0].transcript + " ";
-                }
+                // 1. Tomar EXACTAMENTE el último fragmento de voz que Chrome detectó
+                let latestResultIndex = event.results.length - 1;
+                let spokenRaw = event.results[latestResultIndex][0].transcript.trim();
                 
-                let spokenRaw = currentSpokenChunk.trim();
                 if (!spokenRaw) return;
 
-                // Monitor visual instantáneo
+                // 2. Imprimirlo en el monitor al instante
                 if (isTranscriptVisible) {
-                    let textToShow = spokenRaw.split(/\s+/).slice(-6).join(" ");
-                    DOM.liveTranscript.innerText = textToShow || "Escuchando...";
+                    DOM.liveTranscript.innerText = spokenRaw;
                 }
 
+                // 3. Limpiar el texto (quitar mayúsculas y acentos) para poder comparar
                 let normalizedSpoken = normalize(spokenRaw);
                 let spokenArray = normalizedSpoken.split(/\s+/);
 
-                // 2. SOLUCIÓN LAG MATEMÁTICO: Fast-Path y Filtro de Tamaño
+                // 4. Búsqueda literal (Cero matemáticas)
                 for (let i = 0; i < normalizedTargetWords.length; i++) {
-                    if (wordsSaidInLine.has(i)) continue; // Si ya se atinó, saltar
+                    if (wordsSaidInLine.has(i)) continue; // Saltar si ya la atinó
                     
-                    // Utilizamos la caché (no calculamos nada aquí)
                     let targetWord = normalizedTargetWords[i];
-                    let isHit = false;
-
-                    // VÍA SÚPER RÁPIDA (Fast-Path C++ nativo)
-                    if (targetWord.length <= 3) {
-                        // Palabras cortas exactas
-                        if (spokenArray.includes(targetWord)) isHit = true;
-                    } else {
-                        // Búsqueda substring nativa (0 milisegundos)
-                        if (normalizedSpoken.includes(targetWord)) {
-                            isHit = true;
-                        } else {
-                            // VÍA MATEMÁTICA LIGERA (Filtro Inteligente)
-                            // En vez de comparar TODO contra TODO, solo compara palabras que tengan un largo parecido
-                            for (let j = 0; j < spokenArray.length; j++) {
-                                let spokenWord = spokenArray[j];
-                                // Filtro: Solo calcula Levenshtein si la palabra hablada mide +/- 2 letras que el objetivo
-                                if (Math.abs(spokenWord.length - targetWord.length) <= 2) {
-                                    if (getSimilarity(spokenWord, targetWord) >= 0.60) {
-                                        isHit = true;
-                                        break; // Sale del loop en cuanto acierta
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (isHit) {
+                    
+                    // Si el arreglo de palabras que dijiste INCLUYE la palabra objetivo... ¡Punto!
+                    if (spokenArray.includes(targetWord)) {
                         processHit(i);
                     }
                 }
