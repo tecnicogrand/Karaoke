@@ -50,7 +50,6 @@
             transition: opacity 0.5s ease-in-out;
         }
 
-        /* DISEÑO PROFESIONAL DE LETRAS (PANTALLA CENTRADA) */
         #lyrics-container {
             height: 65vh; 
         }
@@ -93,7 +92,6 @@
             transition: transform 0.1s linear, background 0.1s linear, opacity 0.3s ease; 
         }
 
-        /* ANIMACIÓN DE ACIERTO (ARCADE HIT) */
         @keyframes arcadeHit {
             0% { transform: scale(1.06) translateY(0); filter: drop-shadow(0 0 0px rgba(74, 222, 128, 0)); }
             40% { transform: scale(1.3) translateY(-10px) rotate(-3deg); filter: drop-shadow(0 0 40px rgba(74, 222, 128, 1)); }
@@ -234,15 +232,12 @@
 
         <div id="lyrics-container" class="flex flex-col items-center justify-between w-[95%] md:w-5/6 lg:w-4/5 z-10 mt-8 smooth-hide relative transition-opacity duration-500">
             
-            <!-- Verso Anterior -->
             <div id="prev-lyric-container" class="w-full flex-1 flex items-end justify-center pb-4 md:pb-8 opacity-100 transition-opacity duration-500">
                 <span id="prev-lyric-text" class="lyric-prev px-4 overflow-hidden text-ellipsis whitespace-nowrap w-full text-center"></span>
             </div>
             
-            <!-- Verso Actual Central -->
             <div class="relative flex flex-col items-center justify-center w-full flex-[2] z-20">
                 
-                <!-- Timer Instrumental Central -->
                 <div id="instrumental-timer" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center opacity-0 transition-opacity duration-500 w-full max-w-sm pointer-events-none z-30">
                     <span class="text-cyan-400 font-bold uppercase tracking-widest text-xs mb-3"><i class="fas fa-headphones-alt"></i> Intermedio Musical</span>
                     <div class="w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 relative shadow-[0_0_20px_rgba(0,0,0,0.8)]">
@@ -260,7 +255,6 @@
                 </div>
             </div>
 
-            <!-- Verso Siguiente -->
             <div id="next-lyric-container" class="w-full flex-1 flex items-start justify-center pt-4 md:pt-8 opacity-100 transition-opacity duration-500">
                 <span id="next-lyric" class="lyric-next px-4 overflow-hidden text-ellipsis whitespace-nowrap w-full text-center"></span>
             </div>
@@ -374,7 +368,8 @@
             let longer = s1; let shorter = s2;
             if (s1.length < s2.length) { longer = s2; shorter = s1; }
             let longerLength = longer.length;
-            if (longerLength === 0) return 1.0;
+            if (longerLength === 0) return 1.0; 
+            if (shorter.length === 0) return 0.0;
             
             let costs = new Array();
             for (let i = 0; i <= longer.length; i++) {
@@ -445,7 +440,7 @@
             const data = await response.json();
             
             const track = data.find(t => t.syncedLyrics && !t.instrumental);
-            if (!track) throw new Error("No hay letra sincronizada. Usa la 'Búsqueda Manual' y sé más específico (Ej: Artista - Canción).");
+            if (!track) throw new Error("No hay letra sincronizada. Usa la 'Búsqueda Manual' y sé más específico.");
             return track.syncedLyrics;
         }
 
@@ -575,7 +570,7 @@
             let newIndex = lrcData.findIndex(line => line.time > currentTime) - 1;
             if (newIndex === -2) newIndex = lrcData.length - 1; 
 
-            // CAMBIO DE LÍNEA: Evaluar Rendimiento y Actualizar Textos
+            // CAMBIO DE LÍNEA: Evaluar Rendimiento
             if (newIndex !== currentLineIndex) {
                 if (currentLineIndex >= 0) {
                     const prevLine = lrcData[currentLineIndex];
@@ -599,7 +594,6 @@
                 wordsSaidInLine.clear(); 
                 currentActiveWordIndex = 0;
                 
-                // Actualizar Textos Superior, Central e Inferior
                 if (currentLineIndex >= 0) {
                     DOM.prevLyricText.innerText = currentLineIndex > 0 ? lrcData[currentLineIndex - 1].text : "";
                     renderLine(lrcData[currentLineIndex]);
@@ -607,6 +601,7 @@
                 }
             }
 
+            // LÓGICA DE TIEMPOS MUERTOS MEJORADA (3 Segundos)
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const currentLine = lrcData[currentLineIndex];
                 const nextLine = lrcData[currentLineIndex + 1];
@@ -615,8 +610,8 @@
                 const timeSinceLineStart = currentTime - currentLine.time;
                 const timeToNextLine = nextLine.time - currentTime;
 
-                // LÓGICA DE TIEMPOS MUERTOS (Mejorada para Layout Central)
-                if (timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 4.0) {
+                // Ahora exigimos 3.0 segundos para mostrar el letrero instrumental
+                if (timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 3.0) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
                     
@@ -625,7 +620,6 @@
                     let visualPct = Math.max(0, Math.min((elapsedSilence / totalSilenceDuration) * 100, 100));
                     DOM.instFill.style.width = `${visualPct}%`;
                     
-                    // Atenuar letras pero dejarlas visibles
                     DOM.currentLyric.style.opacity = '0.2';
                     DOM.prevLyricText.style.opacity = '0';
                     DOM.nextLyric.style.opacity = '0';
@@ -638,7 +632,7 @@
                     DOM.trackingContainer.style.opacity = '1'; 
                 }
 
-                // BARRA DE PROGRESO 
+                // LLENADO VISUAL DORADO
                 let progress = 0;
                 if(timeSinceLineStart <= estimatedSingingDuration) {
                     progress = Math.max(0, Math.min(timeSinceLineStart / estimatedSingingDuration, 1));
@@ -686,7 +680,8 @@
 
             } else if (currentLineIndex === -1 && lrcData.length > 0) {
                 let timeToNextLine = lrcData[0].time - currentTime;
-                if (timeToNextLine > 4.0) {
+                // Intro de más de 3 segundos
+                if (timeToNextLine > 3.0) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
                     let visualPct = Math.max(0, Math.min(((lrcData[0].time - timeToNextLine) / lrcData[0].time) * 100, 100));
@@ -745,7 +740,7 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // Capturar el audio reciente
+                // Capturar SOLAMENTE el audio fresco de este milisegundo (Zero Lag)
                 let newTranscript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     newTranscript += event.results[i][0].transcript + " ";
@@ -760,10 +755,16 @@
                 
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 
-                // LA VENTANA DESLIZANTE ESTRICTA
-                // Solo permitimos hacer "Match" a palabras que estén justo en la barra dorada (+/- 2 palabras)
-                let windowStart = Math.max(0, currentActiveWordIndex - 2); 
-                let windowEnd = Math.min(targetWordsRaw.length - 1, currentActiveWordIndex + 2); 
+                // --- MEGA SOLUCIÓN: VENTANA DESVINCULADA SECUENCIAL ---
+                // Buscamos cuál es la palabra más baja que AÚN NO HAS CANTADO.
+                let lowestUnhit = 0;
+                while(wordsSaidInLine.has(lowestUnhit) && lowestUnhit < targetWordsRaw.length) {
+                    lowestUnhit++;
+                }
+
+                // Buscamos desde la última que no has cantado, hasta 3 palabras adelante (Libertad total de tiempo)
+                let windowStart = lowestUnhit; 
+                let windowEnd = Math.min(targetWordsRaw.length - 1, lowestUnhit + 3); 
 
                 for (let tIndex = windowStart; tIndex <= windowEnd; tIndex++) {
                     if (wordsSaidInLine.has(tIndex)) continue; 
@@ -771,10 +772,10 @@
                     const cleanTarget = normalize(targetWordsRaw[tIndex]);
                     let matchedSpokenIndex = -1;
 
-                    // 1. Fast-Path (Exacto)
+                    // 1. Vía Rápida (Exacto)
                     matchedSpokenIndex = spokenWords.findIndex(sw => sw === cleanTarget);
 
-                    // 2. Diccionario Fonético
+                    // 2. Diccionario Fonético de Quejidos (Yeah, Ay, Oh)
                     if (matchedSpokenIndex === -1 && cleanTarget.length <= 4) {
                          const phonetics = {"ay": "^(ai|ahi|hay|aay|i)$", "oh": "^(o|ho|ooh|u)$", "eh": "^(e|he)$", "ah": "^(a|ha)$", "y": "^(i|e)$", "yeah": "^(iea|ya|ie|yea|yeh|ea|ia)$"};
                          if (phonetics[cleanTarget]) {
@@ -783,7 +784,7 @@
                          }
                     }
 
-                    // 3. Tolerancia y Fusión
+                    // 3. Fusión y Tolerancia (Exigiendo 60% normalmente, 50% para cortas)
                     if (matchedSpokenIndex === -1 && cleanTarget.length >= 3) {
                         let requiredSim = cleanTarget.length <= 4 ? 0.50 : 0.60;
                         
@@ -795,7 +796,7 @@
                                 matchedSpokenIndex = i; break;
                             }
                             
-                            // Unir palabras rotas por Chrome ("Co" + "razon")
+                            // Unir palabras rotas
                             if(i < spokenWords.length - 1) {
                                 let combined = sWord + spokenWords[i+1];
                                 if (Math.abs(combined.length - cleanTarget.length) <= 3 && getSimilarity(cleanTarget, combined) >= requiredSim) {
@@ -805,15 +806,15 @@
                         }
                     }
 
-                    // Procesar el acierto
+                    // Acertó
                     if (matchedSpokenIndex !== -1) {
                         processHit(tIndex);
-                        break; // Rompemos para que 1 palabra hablada no active múltiples palabras de la letra a la vez
+                        break; 
                     }
                 }
             };
             
-            // Resurrección Automática Segura
+            // Inmortalizador de Micrófono
             recognition.onend = () => { 
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
@@ -851,10 +852,10 @@
             }
         }
 
+        // --- EVENT LISTENERS UI ---
         document.getElementById('btn-blind-mode').addEventListener('click', function() {
             isBlindModeActive = !isBlindModeActive;
             const icon = this.querySelector('i');
-            
             if(isBlindModeActive) {
                 icon.className = 'fas fa-eye-slash text-red-400 text-lg';
                 DOM.lyricsContainer.classList.add('opacity-0');
