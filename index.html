@@ -50,7 +50,7 @@
             transition: opacity 0.5s ease-in-out;
         }
 
-        .lyric-line { transition: opacity 0.5s ease; min-height: 12vh; }
+        .lyric-line { transition: opacity 0.3s ease; min-height: 12vh; }
         
         .lyric-active {
             font-size: clamp(2rem, 5vw, 5rem);
@@ -58,7 +58,7 @@
             display: flex; flex-wrap: wrap; justify-content: center; 
             line-height: 1.4;
             filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.95));
-            gap: 0.5rem 1.2rem;
+            gap: 0.6rem 1.4rem; /* Separación mejorada */
         }
 
         .lyric-active span {
@@ -67,7 +67,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             padding: 0.2rem 0;
-            will-change: background, transform, filter;
+            will-change: transform, filter;
             transition: transform 0.1s ease-out; 
         }
 
@@ -81,14 +81,15 @@
             margin-bottom: 3vh; display: flex; align-items: center; justify-content: center; gap: 1rem;
         }
 
-        @keyframes hitPopPro {
-            0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(74, 222, 128, 0)); }
-            20% { transform: scale(1.15) translateY(-10px) rotate(-1deg); filter: drop-shadow(0 0 40px rgba(74, 222, 128, 1)); }
-            100% { transform: scale(1.05) translateY(-2px) rotate(0deg); filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.7)); }
+        /* ANIMACIÓN DE ACIERTO TIPO ARCADE (Salto y Neón) */
+        @keyframes arcadeHit {
+            0% { transform: scale(1.06) translateY(0); filter: drop-shadow(0 0 0px rgba(74, 222, 128, 0)); }
+            30% { transform: scale(1.15) translateY(-8px) rotate(-2deg); filter: drop-shadow(0 0 30px rgba(74, 222, 128, 1)); color: #4ade80; }
+            100% { transform: scale(1.06) translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.6)); color: #4ade80; }
         }
         
         .hit-word {
-            animation: hitPopPro 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            animation: arcadeHit 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
             background: #4ade80 !important; 
             -webkit-background-clip: text !important;
         }
@@ -101,7 +102,6 @@
             letter-spacing: 2px; border: 1px solid rgba(255,255,255,0.2);
         }
         .badge-perfect { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #451a03; box-shadow: 0 0 30px rgba(251,191,36,0.5); }
-        .badge-excellent { background: linear-gradient(135deg, #ec4899, #f472b6); color: #4c0519; box-shadow: 0 0 30px rgba(236,72,153,0.5); }
         .badge-good { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #082f49; box-shadow: 0 0 30px rgba(14,165,233,0.5); }
 
         @keyframes popIn { 
@@ -132,15 +132,28 @@
             box-shadow: 0 0 15px white, 0 0 30px #fbbf24;
         }
 
+        /* Textos flotantes grandes (Bonos por Línea) */
         .floating-text {
             position: absolute; font-weight: 900; font-size: clamp(2rem, 5vw, 4rem);
-            color: #4ade80; text-shadow: 0 0 30px rgba(74,222,128, 0.8), 0 5px 10px rgba(0,0,0,0.9);
+            color: #fbbf24; text-shadow: 0 0 30px rgba(251,191,36, 0.8), 0 5px 10px rgba(0,0,0,0.9);
             animation: floatUpFade 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: none; z-index: 50;
         }
         @keyframes floatUpFade { 
             0% { transform: translateY(0) scale(0.9); opacity: 0; } 
             20% { transform: translateY(-15px) scale(1.1); opacity: 1; }
             100% { transform: translateY(-80px) scale(1); opacity: 0; } 
+        }
+
+        /* Textos flotantes pequeños (Acierto por Palabra) */
+        .floating-text-small {
+            position: absolute; font-weight: 800; font-size: clamp(1rem, 2.5vw, 2rem);
+            color: #4ade80; text-shadow: 0 0 15px rgba(74,222,128, 0.6), 0 2px 4px rgba(0,0,0,0.8);
+            animation: floatUpFadeSmall 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: none; z-index: 45;
+        }
+        @keyframes floatUpFadeSmall { 
+            0% { transform: translateY(0) scale(0.8); opacity: 0; } 
+            20% { transform: translateY(-10px) scale(1.1); opacity: 1; }
+            100% { transform: translateY(-40px) scale(0.9); opacity: 0; } 
         }
 
         ::-webkit-scrollbar { width: 8px; }
@@ -151,6 +164,7 @@
 </head>
 <body class="flex items-center justify-center h-screen w-screen p-4 md:p-8 box-border selection:bg-yellow-500/30">
 
+    <!-- FONDOS ANIMADOS -->
     <div class="animated-bg">
         <div class="glow-orb orb-1"></div>
         <div class="glow-orb orb-2"></div>
@@ -199,39 +213,25 @@
                 Preparar Escenario
             </button>
             <button id="btn-help" class="w-full text-slate-500 hover:text-slate-300 font-medium py-2 transition-colors text-xs flex items-center justify-center gap-2 mt-1">
-                <i class="fas fa-project-diagram"></i> Guía de Conexión y Audio
+                <i class="fas fa-microphone"></i> Opciones de Micrófono
             </button>
             
             <div id="setup-error" class="text-red-400 text-sm font-bold text-center hidden mt-2 bg-red-950/30 p-3 rounded-lg border border-red-500/20"></div>
         </div>
     </div>
 
-    <!-- MODAL DE AYUDA -->
+    <!-- MODAL DE MICRÓFONO -->
     <div id="help-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 backdrop-blur-lg transition-opacity">
-        <div class="glass-panel p-8 rounded-2xl max-w-2xl w-full border-cyan-500/20 relative overflow-y-auto max-h-[90vh]">
+        <div class="glass-panel p-8 rounded-2xl max-w-md w-full border-cyan-500/20 relative">
             <button id="btn-close-help" class="absolute top-4 right-4 text-slate-500 hover:text-white text-xl"><i class="fas fa-times"></i></button>
-            <h2 class="text-xl font-black text-cyan-400 mb-6 flex items-center gap-2"><i class="fas fa-plug"></i> Configuración de Audio Pro</h2>
+            <h2 class="text-xl font-black text-cyan-400 mb-4 flex items-center gap-2"><i class="fas fa-microphone-alt"></i> Estado del Micrófono</h2>
             
-            <div class="space-y-4 text-sm text-slate-300">
-                <p class="text-slate-400 mb-4 text-xs">Para que el reconocimiento de voz sea exacto, tu PC debe escuchar los micrófonos nítidamente.</p>
-                
-                <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700/50 mb-3">
-                    <h3 class="text-yellow-400 font-bold mb-2 flex items-center gap-2"><i class="fab fa-usb"></i> Conexión BOSE T4S / Digital (Recomendada)</h3>
-                    <p class="text-[11px] mb-2">Conecta un cable USB desde el puerto "PC" de tu consola BOSE a tu Laptop.</p>
-                    <ol class="list-decimal pl-4 space-y-1 text-xs text-slate-400">
-                        <li>En la BOSE, gira la rueda a <b>Prefs</b> > <b>USB B to PC</b>.</li>
-                        <li>Pon L y R en <b>Master</b> (presiona Select).</li>
-                        <li>En tu Laptop, selecciona la BOSE como tu micrófono principal.</li>
-                    </ol>
-                </div>
-
-                <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700/50">
-                    <h3 class="text-cyan-400 font-bold mb-2 flex items-center gap-2"><i class="fas fa-laptop"></i> Usar el micrófono de la Laptop</h3>
-                    <p class="text-[11px] mb-2">Si no tienes cables de audio de retorno, Chrome intentará usar el micrófono ambiental de tu PC.</p>
-                    <ol class="list-decimal pl-4 space-y-1 text-xs text-slate-400">
-                        <li>Pon tu Laptop cerca de las bocinas principales.</li>
-                        <li>Ve a las opciones de Sonido de Windows y desactiva las <b>Mejoras de Audio / Cancelación de eco</b>.</li>
-                    </ol>
+            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700/50 mb-3 text-center">
+                <i class="fas fa-lock text-3xl text-yellow-500 mb-2"></i>
+                <p class="text-sm text-white font-bold mb-1">Para cambiar de micrófono:</p>
+                <p class="text-xs text-slate-400 mb-4">Haz clic en el ícono de "Configuración de sitio" (el botón que está a la izquierda de la dirección URL de esta página en la parte superior) y selecciona el micrófono de tu consola.</p>
+                <div class="inline-block bg-green-500/20 text-green-400 px-3 py-1 border border-green-500/30 rounded-full text-xs font-bold uppercase tracking-widest">
+                    Listo para escuchar
                 </div>
             </div>
         </div>
@@ -248,19 +248,10 @@
         <div id="youtube-player-container"></div>
         <div class="overlay"></div>
 
-        <!-- HUD: Monitor de Micrófono (smooth-hide para modo Ciego/TV) -->
-        <div id="mic-debug-panel" class="absolute top-6 left-6 md:top-8 md:left-8 w-56 glass-panel p-3 rounded-xl z-20 border-l-2 border-l-cyan-400 smooth-hide">
-            <div class="flex items-center justify-between border-b border-white/5 pb-1 mb-2">
-                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1"><i class="fas fa-wave-square"></i> Teleprompter AI</span>
-                <div id="mic-status-dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-            </div>
-            <div id="mic-debug-text" class="text-[11px] text-cyan-300 font-medium italic min-h-[1.5rem] leading-tight truncate">Esperando conexión...</div>
-        </div>
-
         <!-- HUD: Puntuación (smooth-hide para modo Ciego/TV) -->
         <div id="hud-panel" class="absolute top-6 right-6 md:top-8 md:right-8 text-right z-20 smooth-hide">
             <div class="text-5xl md:text-7xl font-black text-white drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] tracking-tighter" id="score-display">0</div>
-            <div class="text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full" id="combo-display">COMBO x1</div>
+            <div class="text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-colors duration-300" id="combo-display">COMBO x1</div>
         </div>
 
         <!-- Pantalla Flotante: INICIO & CUENTA REGRESIVA -->
@@ -274,8 +265,18 @@
             <div id="countdown-number" class="text-[15rem] font-black text-white drop-shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse">3</div>
         </div>
 
-        <!-- Contenedor Central de Letras (smooth-hide para Modo Ciego) -->
-        <div id="lyrics-container" class="text-center w-[95%] md:w-4/5 z-10 mt-8 smooth-hide">
+        <!-- Contenedor Central de Letras -->
+        <div id="lyrics-container" class="text-center w-[95%] md:w-4/5 z-10 mt-8 smooth-hide relative">
+            
+            <!-- INDICADOR DE TIEMPOS MUERTOS (INSTRUMENTAL) -->
+            <div id="instrumental-timer" class="absolute -top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0 transition-opacity duration-500 w-full max-w-xs pointer-events-none">
+                <span class="text-cyan-400 font-bold uppercase tracking-widest text-[10px] mb-1"><i class="fas fa-headphones-alt"></i> Intermedio Musical</span>
+                <div class="w-full h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
+                    <div id="instrumental-fill" class="absolute top-0 right-0 h-full bg-gradient-to-l from-cyan-400 to-blue-600 shadow-[0_0_15px_#22d3ee] w-full transition-all duration-100 ease-linear"></div>
+                </div>
+                <span class="text-white font-black text-xl mt-1 drop-shadow-md">Entra en: <span id="instrumental-countdown" class="text-cyan-300">3</span>s</span>
+            </div>
+
             <div id="prev-lyric-container" class="lyric-prev">
                 <span id="prev-lyric-text" class="truncate max-w-xl"></span>
                 <span id="prev-lyric-badge"></span>
@@ -298,13 +299,8 @@
 
         <!-- Panel DJ Inferior -->
         <div id="controls-panel" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass-panel rounded-2xl p-2 flex items-center gap-1 md:gap-2 z-20 border-t border-white/5">
-            <!-- Botón Ocultar UI (Monitor) -->
-            <button id="btn-toggle-ui" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-cyan-400 transition flex items-center justify-center shrink-0" title="Ver Monitor AI">
-                <i class="fas fa-desktop"></i>
-            </button>
-
             <!-- BOTÓN MODO CIEGO (EL OJO) -->
-            <button id="btn-blind-mode" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-purple-400 transition flex items-center justify-center shrink-0 ml-1" title="Modo Reto Ciego (Ocultar Todo)">
+            <button id="btn-blind-mode" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-purple-400 transition flex items-center justify-center shrink-0 ml-1" title="Modo Reto Ciego (Ocultar Letra y Puntos)">
                 <i class="fas fa-eye"></i>
             </button>
 
@@ -335,7 +331,7 @@
         <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 to-amber-500 mb-1 text-center">
             <i class="fas fa-star text-yellow-400 text-3xl mb-3 block"></i>¡Gran Show!
         </h2>
-        <p class="text-slate-400 mb-6 font-bold tracking-[0.2em] uppercase text-[10px]">Evaluación de Precisión</p>
+        <p class="text-slate-400 mb-6 font-bold tracking-[0.2em] uppercase text-[10px]">Evaluación de Precisión de Palabras</p>
         
         <div class="w-full space-y-3 mb-6">
             <div class="flex justify-between items-center bg-black/30 p-4 rounded-xl border border-yellow-500/20">
@@ -344,7 +340,7 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div class="bg-black/30 p-3 rounded-xl text-center border border-cyan-500/20">
-                    <span class="block text-cyan-400/80 font-bold uppercase tracking-wider text-[9px] mb-1">Aciertos</span>
+                    <span class="block text-cyan-400/80 font-bold uppercase tracking-wider text-[9px] mb-1">Palabras Atinadas</span>
                     <span id="res-hits" class="text-2xl font-black text-cyan-400">0</span>
                 </div>
                 <div class="bg-black/30 p-3 rounded-xl text-center border border-pink-500/20">
@@ -363,10 +359,9 @@
     <script src="https://www.youtube.com/iframe_api"></script>
     
     <script>
-        // VARIABLES GLOBALES DE ESTADO
         let lrcData = [];
         let currentLineIndex = -1;
-        let currentActiveWordIndex = 0; // Vital para evitar bug del futuro
+        let currentActiveWordIndex = 0; 
         let player;
         let videoId = "";
         let syncOffset = 0; 
@@ -375,12 +370,14 @@
         
         // Modos Especiales
         let isTvModeActive = false;
-        let isBlindModeActive = false; // Modo Ciego
+        let isBlindModeActive = false; 
         
         let score = 0; let combo = 1; let maxCombo = 1;
         let wordsSaidInLine = new Set();
-        let totalLines = 0; let linesHit = 0;
+        let correctWordsTotal = 0;
+        let totalWordsInSong = 0;
         let cachedSpans = []; 
+        let currentMicrophoneTranscript = ""; 
 
         const DOM = {
             setupScreen: document.getElementById('setup-screen'),
@@ -398,30 +395,30 @@
             scoreDisplay: document.getElementById('score-display'),
             comboDisplay: document.getElementById('combo-display'),
             hudPanel: document.getElementById('hud-panel'),
-            micDebugPanel: document.getElementById('mic-debug-panel'),
-            micDebugText: document.getElementById('mic-debug-text'),
-            micStatusDot: document.getElementById('mic-status-dot'),
             syncDisplay: document.getElementById('sync-display'),
             trackingContainer: document.getElementById('tracking-line-container'),
             trackingFill: document.getElementById('tracking-line-fill'),
-            lyricsContainer: document.getElementById('lyrics-container')
+            lyricsContainer: document.getElementById('lyrics-container'),
+            instrumentalTimer: document.getElementById('instrumental-timer'),
+            instCountdown: document.getElementById('instrumental-countdown'),
+            instFill: document.getElementById('instrumental-fill')
         };
 
         function getSimilarity(s1, s2) {
             let longer = s1; let shorter = s2;
             if (s1.length < s2.length) { longer = s2; shorter = s1; }
             let longerLength = longer.length;
-            if (longerLength == 0) return 1.0;
+            if (longerLength === 0) return 1.0;
             
             let costs = new Array();
             for (let i = 0; i <= longer.length; i++) {
                 let lastValue = i;
                 for (let j = 0; j <= shorter.length; j++) {
-                    if (i == 0) costs[j] = j;
+                    if (i === 0) costs[j] = j;
                     else {
                         if (j > 0) {
                             let newValue = costs[j - 1];
-                            if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                            if (s1.charAt(i - 1) !== s2.charAt(j - 1))
                                 newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
                             costs[j - 1] = lastValue;
                             lastValue = newValue;
@@ -501,22 +498,20 @@
 
             try {
                 const titleToSearch = manualQuery || await fetchVideoTitle(videoId);
-                document.getElementById('loading-text').innerText = "Buscando Pista Original...";
+                document.getElementById('loading-text').innerText = "Buscando Pista Oficial...";
                 
                 const rawLRC = await fetchLyrics(titleToSearch);
                 lrcData = parseLRC(rawLRC);
                 
                 if (lrcData.length === 0) throw new Error("La letra no está sincronizada.");
+                
+                // Contar total de palabras para la pantalla de resultados
+                totalWordsInSong = lrcData.reduce((acc, line) => acc + line.words.length, 0);
 
                 document.getElementById('loading-text').innerText = "Montando Escenario...";
                 
-                if(isTvModeActive) {
-                    DOM.hudPanel.classList.add('opacity-0');
-                    DOM.micDebugPanel.classList.add('opacity-0');
-                } else {
-                    DOM.hudPanel.classList.remove('opacity-0');
-                    DOM.micDebugPanel.classList.remove('opacity-0');
-                }
+                if(isTvModeActive) { DOM.hudPanel.classList.add('opacity-0'); } 
+                else { DOM.hudPanel.classList.remove('opacity-0'); }
                 
                 isBlindModeActive = false;
                 DOM.lyricsContainer.classList.remove('opacity-0');
@@ -545,13 +540,15 @@
             DOM.karaokeScreen.classList.remove('hidden');
             
             syncOffset = 0; currentLineIndex = -1; currentActiveWordIndex = 0;
-            score = 0; combo = 1; maxCombo = 1; totalLines = lrcData.length; linesHit = 0; 
+            score = 0; combo = 1; maxCombo = 1; correctWordsTotal = 0;
             DOM.scoreDisplay.innerText = "0"; DOM.comboDisplay.innerText = "COMBO x1";
+            DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-colors duration-300";
             updateSyncDisplay();
             
             DOM.currentLyric.innerHTML = "<span style='color:#fbbf24'>Preparando</span> <span style='color:#fbbf24'>Micrófonos...</span>";
             DOM.nextLyric.innerText = ""; DOM.prevLyricText.innerText = ""; DOM.prevLyricBadge.innerHTML = "";
             cachedSpans = []; DOM.trackingContainer.classList.add('opacity-0');
+            DOM.instrumentalTimer.classList.add('opacity-0');
             DOM.startOverlay.classList.remove('hidden');
         }
 
@@ -586,6 +583,7 @@
                 span.style.background = 'white';
                 span.style.webkitBackgroundClip = 'text'; 
                 span.style.webkitTextFillColor = 'transparent';
+                span.style.transform = 'scale(1.06)';
                 span.dataset.state = 'future'; 
                 DOM.currentLyric.appendChild(span);
             });
@@ -598,6 +596,35 @@
             }
 
             const currentTime = player.getCurrentTime() + syncOffset;
+            
+            // Lógica del Indicador de Tiempo Muerto (Instrumental)
+            let nextValidIndex = currentLineIndex + 1;
+            if (nextValidIndex < lrcData.length) {
+                let timeToNext = lrcData[nextValidIndex].time - currentTime;
+                
+                if (timeToNext > 4.0) { 
+                    DOM.instrumentalTimer.classList.remove('opacity-0');
+                    DOM.instCountdown.innerText = Math.ceil(timeToNext);
+                    
+                    let visualPct = Math.max(0, Math.min((timeToNext / 10.0) * 100, 100));
+                    DOM.instFill.style.width = `${visualPct}%`;
+                    
+                    // Atenuar la letra anterior si se quedó en pantalla mucho tiempo
+                    if (timeToNext > 6.0 && cachedSpans.length > 0) {
+                         DOM.currentLyric.style.opacity = '0.15';
+                         DOM.trackingContainer.style.opacity = '0';
+                    } else {
+                         DOM.currentLyric.style.opacity = '1';
+                    }
+                } else {
+                    DOM.instrumentalTimer.classList.add('opacity-0');
+                    DOM.currentLyric.style.opacity = '1';
+                }
+            } else {
+                DOM.instrumentalTimer.classList.add('opacity-0');
+            }
+
+            // Lógica de avance de líneas
             let newIndex = lrcData.findIndex(line => line.time > currentTime) - 1;
             if (newIndex === -2) newIndex = lrcData.length - 1; 
 
@@ -606,7 +633,10 @@
                     evaluateLine(currentLineIndex); 
                     DOM.prevLyricText.innerText = lrcData[currentLineIndex].text;
                 }
-                currentLineIndex = newIndex; wordsSaidInLine.clear(); currentActiveWordIndex = 0;
+                currentLineIndex = newIndex; 
+                wordsSaidInLine.clear(); 
+                currentMicrophoneTranscript = ""; 
+                currentActiveWordIndex = 0;
                 
                 if (currentLineIndex >= 0) {
                     renderLine(lrcData[currentLineIndex]);
@@ -614,6 +644,7 @@
                 }
             }
 
+            // Iluminado Fluido de la línea actual
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const startTime = lrcData[currentLineIndex].time; 
                 const endTime = lrcData[currentLineIndex + 1].time;
@@ -627,7 +658,6 @@
                     
                     for(let i=0; i < cachedSpans.length; i++) {
                         let span = cachedSpans[i];
-                        
                         if (span.classList.contains('hit-word')) continue;
                         
                         let targetBaseColor = '#fbbf24'; 
@@ -636,28 +666,30 @@
                             if (span.dataset.state !== 'past') {
                                 span.style.background = targetBaseColor;
                                 span.style.webkitBackgroundClip = 'text'; 
-                                span.style.transform = 'scale(1)';
+                                span.style.transform = 'scale(1.06)';
                                 span.dataset.state = 'past';
                             }
                         } else if (i === currentActiveWordIndex) {
                             const fillPct = (exactProgress - currentActiveWordIndex) * 100;
                             span.style.background = `linear-gradient(to right, ${targetBaseColor} ${fillPct}%, white ${fillPct}%)`;
                             span.style.webkitBackgroundClip = 'text'; 
-                            span.style.transform = `scale(${1 + (0.06 * (fillPct/100))})`; 
                             span.dataset.state = 'active';
                         } else {
                             if (span.dataset.state !== 'future') {
                                 span.style.background = 'white';
                                 span.style.webkitBackgroundClip = 'text'; 
-                                span.style.transform = 'scale(1)';
+                                span.style.transform = 'scale(1.06)';
                                 span.dataset.state = 'future';
                             }
                         }
                     }
                 }
                 
-                DOM.trackingContainer.classList.remove('opacity-0');
-                DOM.trackingFill.style.width = `${progress * 100}%`;
+                // Mostrar barra inferior solo si el instrumental no la ha apagado
+                if (DOM.currentLyric.style.opacity !== '0.15') {
+                    DOM.trackingContainer.classList.remove('opacity-0');
+                    DOM.trackingFill.style.width = `${progress * 100}%`;
+                }
             } else { 
                 DOM.trackingContainer.classList.add('opacity-0'); 
             }
@@ -667,59 +699,66 @@
 
         function evaluateLine(indexToEval) {
             if (indexToEval < 0) return;
-            
             const targetWords = lrcData[indexToEval].words.length;
             if (targetWords === 0) return;
 
             const hitCount = wordsSaidInLine.size;
-            let percent = (hitCount / targetWords) * 100;
-            
-            if (targetWords <= 3 && hitCount >= 1) percent = 100; 
-            else if (percent >= 40) percent = 100; 
-            else if (hitCount >= 1) percent = 50; 
+            const missedCount = targetWords - hitCount;
 
-            let points = 0; let badgeHtml = ""; let badgeClass = "badge ";
+            // Si hay palabras perdidas, se rompe el combo
+            if (missedCount > 0) {
+                combo = 1;
+                DOM.comboDisplay.innerText = `COMBO x${combo}`;
+                DOM.comboDisplay.classList.remove('bg-yellow-400');
+                DOM.comboDisplay.classList.add('bg-slate-400', 'text-white');
+            } else {
+                DOM.comboDisplay.classList.add('bg-yellow-400');
+                DOM.comboDisplay.classList.remove('bg-slate-400', 'text-white');
+                
+                // Bono de línea perfecta
+                let bonus = 50 * combo;
+                score += bonus; 
+                DOM.scoreDisplay.innerText = score;
+                
+                if(!isTvModeActive && !isBlindModeActive) {
+                    DOM.prevLyricBadge.className = "badge badge-perfect"; 
+                    DOM.prevLyricBadge.innerHTML = `<i class="fas fa-star text-yellow-100"></i> LÍNEA PERFECTA`; 
+                    createFloatingText(`+${bonus} BONUS!`);
+                }
+                return;
+            }
 
-            if (percent >= 60) {
-                points = 300 * combo; badgeHtml = `<i class="fas fa-star text-yellow-100"></i> PERFECTO`; badgeClass += "badge-perfect";
-                combo++; linesHit++; 
-                if(!isTvModeActive && !isBlindModeActive) createFloatingText(`+${points}`);
-            } else if (percent >= 30) {
-                points = 150 * combo; badgeHtml = `<i class="fas fa-fire text-pink-100"></i> EXCELENTE`; badgeClass += "badge-excellent";
-                combo++; linesHit++; 
-                if(!isTvModeActive && !isBlindModeActive) createFloatingText(`+${points}`);
-            } else if (hitCount > 0) {
-                points = 50 * combo; badgeHtml = `<i class="fas fa-thumbs-up text-blue-100"></i> BIEN`; badgeClass += "badge-good";
-                combo = 1; linesHit++; 
-                if(!isTvModeActive && !isBlindModeActive) createFloatingText(`+${points}`);
-            } else { combo = 1; }
-
-            if(combo > maxCombo) maxCombo = combo;
-            score += points; DOM.scoreDisplay.innerText = score; DOM.comboDisplay.innerText = `COMBO x${combo}`;
-
-            if (points > 0 && !isTvModeActive && !isBlindModeActive) { 
-                DOM.prevLyricBadge.className = badgeClass; 
-                DOM.prevLyricBadge.innerHTML = badgeHtml; 
-            } else { 
+            // Feedback visual en la línea anterior si hubo errores
+            if (!isTvModeActive && !isBlindModeActive) {
+                if (hitCount === 0) {
+                    DOM.prevLyricBadge.className = "badge bg-red-900/80 text-red-300 border-red-500/30"; 
+                    DOM.prevLyricBadge.innerHTML = `<i class="fas fa-times"></i> FALLASTE`; 
+                } else if (hitCount > 0) {
+                    DOM.prevLyricBadge.className = "badge badge-good opacity-50"; 
+                    DOM.prevLyricBadge.innerHTML = `<i class="fas fa-exclamation-triangle text-blue-100"></i> INCOMPLETO`; 
+                }
+            } else {
                 DOM.prevLyricBadge.className = ""; 
                 DOM.prevLyricBadge.innerHTML = ""; 
             }
         }
 
-        function createFloatingText(text) {
-            const el = document.createElement('div'); el.className = 'floating-text'; el.innerText = text;
-            const randomX = Math.random() * 20 - 10; el.style.left = `calc(80% + ${randomX}px)`; el.style.top = `20%`;
-            DOM.karaokeScreen.appendChild(el); setTimeout(() => el.remove(), 1000);
+        function createFloatingText(text, isSmall = false) {
+            const el = document.createElement('div'); 
+            el.className = isSmall ? 'floating-text-small' : 'floating-text'; 
+            el.innerText = text;
+            const randomX = Math.random() * 40 - 20; 
+            el.style.left = `calc(50% + ${randomX}px)`; 
+            el.style.top = isSmall ? `40%` : `20%`;
+            DOM.karaokeScreen.appendChild(el); 
+            setTimeout(() => el.remove(), isSmall ? 600 : 1000);
         }
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
         function initMicForScoring() {
-            if (!SpeechRecognition) {
-                DOM.micDebugText.innerText = "Navegador no soportado. Usa Chrome.";
-                DOM.micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_red]"; return;
-            }
+            if (!SpeechRecognition) return;
             
             recognition = new SpeechRecognition();
             recognition.lang = 'es-MX'; 
@@ -727,31 +766,17 @@
             recognition.interimResults = true;
             recognition.maxAlternatives = 3; 
 
-            recognition.onstart = () => {
-                DOM.micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_10px_#4ade80]";
-                DOM.micDebugText.innerText = "🟢 Escuchando audio...";
-            };
-
-            recognition.onerror = (e) => {
-                DOM.micDebugText.innerText = e.error === 'not-allowed' ? `🔴 Permiso denegado. Candado 🔒` : `🔴 Error: ${e.error}`;
-                DOM.micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_red]";
-            };
-
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                let availableSaidWords = [];
-                let debugText = "";
-                
+                let latestTranscript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (i === event.resultIndex) debugText = event.results[i][0].transcript; 
                     for(let j = 0; j < event.results[i].length; j++) {
-                        let transcript = event.results[i][j].transcript;
-                        availableSaidWords.push(...normalize(transcript).split(/\s+/).filter(w => w.length >= 2));
+                        latestTranscript += " " + event.results[i][j].transcript;
                     }
                 }
                 
-                DOM.micDebugText.innerText = `🎤 "${debugText.trim().substring(0, 30)}..."`;
+                currentMicrophoneTranscript += normalize(latestTranscript);
                 
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 
@@ -761,19 +786,26 @@
                     
                     const cleanTarget = normalize(tWord);
                     if (cleanTarget.length < 2) {
-                        if (availableSaidWords.length > 0) processHit(tIndex);
+                        if (currentMicrophoneTranscript.length > 2) processHit(tIndex);
                         return; 
                     }
                     
-                    let matchedIndex = availableSaidWords.findIndex(sWord => sWord === cleanTarget || sWord.includes(cleanTarget) || cleanTarget.includes(sWord));
-                    
-                    if (matchedIndex === -1) {
-                        matchedIndex = availableSaidWords.findIndex(sWord => getSimilarity(cleanTarget, sWord) >= 0.55);
+                    let foundMatch = false;
+
+                    if (currentMicrophoneTranscript.includes(cleanTarget)) {
+                        foundMatch = true;
+                    } else {
+                        const wordsInTranscript = currentMicrophoneTranscript.split(/\s+/).filter(w => w.length > 2);
+                        for(let sWord of wordsInTranscript) {
+                            if (getSimilarity(cleanTarget, sWord) >= 0.55) {
+                                foundMatch = true; break;
+                            }
+                        }
                     }
 
-                    if (matchedIndex !== -1) {
+                    if (foundMatch) {
                         processHit(tIndex);
-                        availableSaidWords.splice(matchedIndex, 1); 
+                        currentMicrophoneTranscript = currentMicrophoneTranscript.replace(cleanTarget, "");
                     }
                 });
             };
@@ -793,6 +825,23 @@
                 cachedSpans[tIndex].style = ""; 
                 cachedSpans[tIndex].classList.add('hit-word');
                 cachedSpans[tIndex].dataset.state = 'hit';
+
+                // PUNTUACIÓN INMEDIATA POR PALABRA
+                combo++;
+                if(combo > maxCombo) maxCombo = combo;
+                
+                let pointsEarned = 10 * combo;
+                score += pointsEarned;
+                correctWordsTotal++;
+                
+                DOM.scoreDisplay.innerText = score; 
+                DOM.comboDisplay.innerText = `COMBO x${combo}`;
+                DOM.comboDisplay.classList.add('bg-yellow-400');
+                DOM.comboDisplay.classList.remove('bg-slate-400', 'text-white');
+                
+                if(!isTvModeActive && !isBlindModeActive) {
+                    createFloatingText(`+${pointsEarned}`, true); 
+                }
             }
         }
 
@@ -809,10 +858,6 @@
                 DOM.lyricsContainer.classList.remove('opacity-0');
                 if(!isTvModeActive) DOM.hudPanel.classList.remove('opacity-0');
             }
-        });
-
-        document.getElementById('btn-toggle-ui').addEventListener('click', () => {
-            DOM.micDebugPanel.classList.toggle('opacity-0');
         });
 
         document.getElementById('btn-pause').addEventListener('click', () => {
@@ -846,7 +891,7 @@
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             DOM.karaokeScreen.classList.add('hidden'); DOM.resultsScreen.classList.remove('hidden'); DOM.resultsScreen.classList.add('flex');
             document.getElementById('res-score').innerText = score;
-            document.getElementById('res-hits').innerText = `${linesHit} / ${totalLines}`;
+            document.getElementById('res-hits').innerText = `${correctWordsTotal} / ${totalWordsInSong}`;
             document.getElementById('res-max-combo').innerText = `x${maxCombo}`;
         }
 
