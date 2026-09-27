@@ -357,7 +357,7 @@
     <!-- API DE YOUTUBE -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        //        let lrcData = [];
+        let lrcData = [];
         let currentLineIndex = -1;
         let currentActiveWordIndex = 0; 
         let player;
@@ -397,7 +397,7 @@
             trackingFill: document.getElementById('tracking-line-fill')
         };
 
-        //        function getSimilarity(s1, s2) {
+        function getSimilarity(s1, s2) {
             let longer = s1; let shorter = s2;
             if (s1.length < s2.length) { longer = s2; shorter = s1; }
             let longerLength = longer.length;
@@ -426,7 +426,7 @@
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
         function showError(msg) { DOM.setupError.innerText = msg; DOM.setupError.classList.remove('hidden'); }
 
-        //        async function loadMicrophones() {
+        async function loadMicrophones() {
             try {
                 await navigator.mediaDevices.getUserMedia({ audio: true });
                 const devices = await navigator.mediaDevices.enumerateDevices();
@@ -453,7 +453,7 @@
         document.getElementById('btn-help').addEventListener('click', () => DOM.helpModal.classList.remove('hidden'));
         document.getElementById('btn-close-help').addEventListener('click', () => DOM.helpModal.classList.add('hidden'));
 
-        //        function extractVideoId(url) {
+        function extractVideoId(url) {
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
             const match = url.match(regex);
             return match ? match[1] : null;
@@ -501,7 +501,7 @@
             return track.syncedLyrics;
         }
 
-        //        document.getElementById('btn-fetch').addEventListener('click', async () => {
+        document.getElementById('btn-fetch').addEventListener('click', async () => {
             DOM.setupError.classList.add('hidden');
             const url = document.getElementById('youtube-url').value.trim();
             const manualQuery = document.getElementById('manual-query').value.trim();
@@ -552,7 +552,7 @@
             });
         }
 
-        //        function onPlayerReady(event) {
+        function onPlayerReady(event) {
             player.setVolume(100);
             DOM.loadingScreen.classList.add('hidden'); DOM.loadingScreen.classList.remove('flex');
             DOM.karaokeScreen.classList.remove('hidden');
@@ -691,7 +691,7 @@
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        //        function evaluateLine(indexToEval) {
+        function evaluateLine(indexToEval) {
             if (indexToEval < 0 || isVdjModeActive) return;
             
             const targetWords = lrcData[indexToEval].words.length;
@@ -731,7 +731,7 @@
             DOM.karaokeScreen.appendChild(el); setTimeout(() => el.remove(), 1000);
         }
 
-        //        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
         function initMicForScoring() {
@@ -808,7 +808,7 @@
             try { recognition.start(); } catch(e){ }
         }
 
-        //        function showResults() {
+        function showResults() {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             DOM.karaokeScreen.classList.add('hidden'); DOM.resultsScreen.classList.remove('hidden'); DOM.resultsScreen.classList.add('flex');
             document.getElementById('res-score').innerText = score;
