@@ -190,10 +190,9 @@
             <div id="setup-error" class="text-red-400 text-sm font-bold text-center hidden mt-2 bg-red-950/30 p-3 rounded-lg border border-red-500/20"></div>
         </div>
 
-        <!-- INDICADOR DE VERSIÓN REINICIADO AL 0.2 PARA RASTREAR BUG -->
         <div class="mt-8 text-center flex flex-col items-center justify-center gap-2">
             <div class="flex items-center gap-2 text-slate-500/60 font-bold uppercase tracking-[0.2em] font-mono text-[10px]">
-                <span>Build v0.2 (Cero Matemáticas / Nivel 1)</span>
+                <span>Build v0.3 (Motor Optimizado / Cero Lag)</span>
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -231,8 +230,8 @@
 
         <!-- Panel de Monitor de Voz en Vivo -->
         <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/90 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
-            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Monitor Cero-Lag (50% Tolerancia) <i class="fas fa-bolt text-yellow-400"></i></span>
-            <div id="live-transcript" class="text-white font-mono text-base h-12 flex items-center justify-center tracking-wider bg-black/50 rounded-lg border border-white/5">Esperando voz...</div>
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Monitor Cero-Lag (Velocidad Luz) <i class="fas fa-bolt text-yellow-400"></i></span>
+            <div id="live-transcript" class="text-white font-mono text-xl md:text-2xl h-12 flex items-center justify-center tracking-wider bg-black/50 rounded-lg border border-white/5 font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]">Esperando voz...</div>
         </div>
 
         <div id="lyrics-container" class="flex flex-col items-center justify-between w-[95%] md:w-5/6 lg:w-4/5 z-10 mt-8 smooth-hide relative transition-opacity duration-500">
@@ -371,7 +370,6 @@
             liveTranscript: document.getElementById('live-transcript')
         };
 
-        // ÚNICA función de normalización que queda. Quita mayúsculas, comas y acentos.
         const normalize = (str) => {
             if(!str) return "";
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
@@ -526,7 +524,6 @@
         function renderLine(lineData) {
             DOM.currentLyric.innerHTML = '';
             
-            // Convertimos toda la línea a versión normalizada una sola vez
             normalizedTargetWords = lineData.words.map(w => normalize(w));
 
             lineData.words.forEach(word => {
@@ -582,7 +579,6 @@
                 }
             }
 
-            // Lógica de Tiempos Muertos y Barra Sincronizada
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const currentLine = lrcData[currentLineIndex];
                 const nextLine = lrcData[currentLineIndex + 1];
@@ -679,30 +675,25 @@
             animationFrameId = requestAnimationFrame(syncLoop);
         }
 
-        // FUNCION SUPER BASICA: Compara que las letras coincidan al menos a la mitad
-        function check50PercentMatch(spoken, target) {
-            if (!spoken || !target) return false;
-            if (spoken === target) return true; // Directo al grano
-            
-            // Palabras de 1 o 2 letras necesitan ser exactas para evitar falsos positivos constantes
-            if (target.length <= 2) return false;
+        // Función ultra-rápida (50% caracteres o coincidencia directa)
+        function isFastMatch(spoken, target) {
+            if (spoken === target) return true;
+            if (spoken.includes(target) || target.includes(spoken)) {
+                return (Math.min(spoken.length, target.length) / Math.max(spoken.length, target.length)) >= 0.5;
+            }
+            // Si la longitud varía demasiado, ni calcular
+            if (Math.abs(spoken.length - target.length) > 3) return false;
 
-            // Si una contiene a la otra (ej: "amor" esta dentro de "amores")
-            if (spoken.includes(target) || target.includes(spoken)) return true;
-
-            // Cuenta rápida de letras compartidas (básico y sin matemática pesada)
             let matches = 0;
             let tempTarget = target;
-            for (let i = 0; i < spoken.length; i++) {
-                let char = spoken[i];
-                if (tempTarget.includes(char)) {
+            for (let char of spoken) {
+                let idx = tempTarget.indexOf(char);
+                if (idx !== -1) {
                     matches++;
-                    tempTarget = tempTarget.replace(char, ''); // Se quita para no contarla doble
+                    tempTarget = tempTarget.slice(0, idx) + tempTarget.slice(idx + 1); // Quitar letra usada
                 }
             }
-            
-            let percent = (matches / Math.max(spoken.length, target.length)) * 100;
-            return percent >= 50;
+            return (matches / Math.max(spoken.length, target.length)) >= 0.5;
         }
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -718,7 +709,6 @@
             recognition.interimResults = true; 
 
             recognition.onstart = () => { isRecognizing = true; };
-
             recognition.onerror = (event) => {
                 if (event.error === 'not-allowed' || event.error === 'audio-capture' || event.error === 'network') {
                     isRecognizing = false; 
@@ -728,37 +718,38 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // 1. CAPTURA PURA (Cero memoria pesada, solo lo más reciente)
-                let spokenRaw = "";
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    spokenRaw += event.results[i][0].transcript + " ";
+                // 1. EXTRACTOR VELOZ (Solo leemos las últimas palabras pronunciadas)
+                let latestRaw = "";
+                // En lugar de leer TODO el historial de la frase, leemos lo más reciente
+                for (let i = Math.max(event.resultIndex, event.results.length - 2); i < event.results.length; i++) {
+                    latestRaw += event.results[i][0].transcript + " ";
                 }
-                spokenRaw = spokenRaw.trim();
                 
-                if (!spokenRaw) return;
+                // Nos quedamos solo con las últimas 4 palabras (Cero Lag garantizado)
+                let recentWordsArray = latestRaw.trim().split(/\s+/).slice(-4);
+                let textToDisplay = recentWordsArray.join(" ");
 
-                // 2. IMPRESIÓN INSTANTÁNEA (Usa requestAnimationFrame para evitar lag de pantalla)
+                if (!textToDisplay) return;
+
+                // 2. RENDERIZADO INSTANTÁNEO AL DOM
                 if (isTranscriptVisible) {
                     requestAnimationFrame(() => {
-                        DOM.liveTranscript.innerText = spokenRaw;
+                        DOM.liveTranscript.innerText = textToDisplay;
                     });
                 }
 
-                // 3. LIMPIEZA SIMPLE
-                let normalizedSpoken = normalize(spokenRaw);
-                let spokenArray = normalizedSpoken.split(/\s+/);
-
-                // 4. COMPARACIÓN AL 50%
+                // 3. COMPARACIÓN RELÁMPAGO (O(1))
                 for (let i = 0; i < normalizedTargetWords.length; i++) {
-                    if (wordsSaidInLine.has(i)) continue; 
+                    if (wordsSaidInLine.has(i)) continue; // Si ya cantaste esta palabra, salta a la siguiente
                     
                     let targetWord = normalizedTargetWords[i];
+                    if (targetWord.length < 2) continue; // Ignoramos conectores de 1 letra como "y", "a"
                     
-                    for (let j = 0; j < spokenArray.length; j++) {
-                        let spokenWord = spokenArray[j];
-                        
-                        // Si da la validación del 50%, damos punto y terminamos este ciclo
-                        if (check50PercentMatch(spokenWord, targetWord)) {
+                    for (let j = 0; j < recentWordsArray.length; j++) {
+                        let spokenWord = normalize(recentWordsArray[j]);
+                        if (!spokenWord) continue;
+
+                        if (isFastMatch(spokenWord, targetWord)) {
                             processHit(i);
                             break; 
                         }
@@ -766,6 +757,7 @@
                 }
             };
             
+            // Reiniciador Inmortal
             recognition.onend = () => { 
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
