@@ -178,8 +178,8 @@
                     <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
                 </div>
                 <div class="ml-4">
-                    <span class="text-white font-bold text-sm flex items-center gap-2">Modo TV (Vista Limpia) <span class="bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest">Recomendado</span></span>
-                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta marcadores en pantalla para proyectores. Te sigue calificando.</span>
+                    <span class="text-white font-bold text-sm flex items-center gap-2">Modo TV (Vista Limpia)</span>
+                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta marcadores en pantalla para proyectores.</span>
                 </div>
             </div>
             
@@ -193,7 +193,7 @@
         <!-- INDICADOR DE VERSIÓN -->
         <div class="mt-8 text-center flex flex-col items-center justify-center gap-2">
             <div class="flex items-center gap-2 text-slate-500/60 font-bold uppercase tracking-[0.2em] font-mono text-[10px]">
-                <span>Build v4.5 (Restored Pro Engine)</span>
+                <span>Build v4.8 (Motor Clásico Restaurado)</span>
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -231,7 +231,7 @@
 
         <!-- Panel de Monitor de Voz en Vivo -->
         <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/90 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
-            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor de Tolerancia Híbrido (Monitor Activo) <i class="fas fa-bolt text-yellow-400"></i></span>
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor Clásico (Reconocimiento en Vivo) <i class="fas fa-bolt text-yellow-400"></i></span>
             <div id="live-transcript" class="text-white font-mono text-base h-12 flex items-center justify-center tracking-wider bg-black/50 rounded-lg border border-white/5">Esperando voz...</div>
         </div>
 
@@ -266,7 +266,7 @@
         </div>
 
         <div id="controls-panel" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass-panel rounded-2xl p-2 flex items-center gap-2 md:gap-3 z-20 border-t border-white/5">
-            <button id="btn-blind-mode" class="w-12 h-12 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-purple-400 transition flex items-center justify-center shrink-0 ml-1" title="Modo Reto Ciego (Ocultar Letra)">
+            <button id="btn-blind-mode" class="w-12 h-12 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-purple-400 transition flex items-center justify-center shrink-0 ml-1" title="Modo Reto Ciego">
                 <i class="fas fa-eye text-lg"></i>
             </button>
             
@@ -370,7 +370,6 @@
             liveTranscript: document.getElementById('live-transcript')
         };
 
-        // Restauración de Función Matemática de Similitud
         function getSimilarity(s1, s2) {
             let longer = s1;
             let shorter = s2;
@@ -618,7 +617,7 @@
                 const totalSilenceDuration = nextLine.time - (currentLine.time + estimatedSingingDuration);
                 const isCurrentlyInSilence = timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 0;
 
-                // Reloj Instrumental Corregido (Hasta llegar al segundo 0)
+                // Reloj Instrumental Corregido a 3 segundos
                 if (totalSilenceDuration >= 3.0 && isCurrentlyInSilence) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
@@ -740,85 +739,61 @@
                 }
             };
 
+            // MOTOR CLÁSICO RESTAURADO: Sin candados, evalúa toda la frase dinámicamente
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                let currentInterim = "";
-                // Leemos solo los bloques recientes de la sesión actual de voz
+                let newTranscript = "";
+                // Leemos los bloques más recientes y estables
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    currentInterim += event.results[i][0].transcript + " ";
+                    newTranscript += event.results[i][0].transcript + " ";
                 }
                 
-                let spokenRaw = currentInterim.trim();
+                let spokenRaw = newTranscript.trim();
                 if (!spokenRaw) return;
 
-                // Monitor en vivo sin lag
+                // Monitor visual
                 if (isTranscriptVisible) {
-                    requestAnimationFrame(() => {
-                        let textToShow = spokenRaw.split(/\s+/).slice(-5).join(" ");
-                        DOM.liveTranscript.innerText = textToShow || "Escuchando...";
-                    });
+                    let textToShow = spokenRaw.split(/\s+/).slice(-6).join(" ");
+                    DOM.liveTranscript.innerText = textToShow || "Escuchando...";
                 }
 
-                // MOTOR HÍBRIDO RESTAURADO (Rapidez + Tolerancia Matemática)
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 let normalizedSpoken = normalize(spokenRaw);
                 let spokenArray = normalizedSpoken.split(/\s+/);
-                
-                // Ubicar dónde vamos en la frase real
-                let nextWordIndex = 0;
-                while(wordsSaidInLine.has(nextWordIndex) && nextWordIndex < targetWordsRaw.length) {
-                    nextWordIndex++;
-                }
-                if (nextWordIndex >= targetWordsRaw.length) return; 
 
-                // Ventana deslizante para no atorar la PC
-                let windowEnd = Math.min(targetWordsRaw.length, nextWordIndex + 3);
-
-                for (let i = nextWordIndex; i < windowEnd; i++) {
-                    if (wordsSaidInLine.has(i)) continue; 
+                // Comparamos sin bloqueos de índice. Permite saltarse palabras y seguir puntuando.
+                for (let i = 0; i < targetWordsRaw.length; i++) {
+                    if (wordsSaidInLine.has(i)) continue; // Si ya se atinó, la saltamos
                     
                     let targetWord = normalize(targetWordsRaw[i]);
                     let isHit = false;
 
-                    // 1. Direct Match (Cero cálculos, velocidad luz)
-                    if (normalizedSpoken.includes(targetWord)) {
-                        if (targetWord.length > 2) {
-                            isHit = true;
-                        } else if (spokenArray.includes(targetWord)) {
+                    if (targetWord.length <= 3) {
+                        // Palabras cortas: Exigir palabra exacta para no regalar puntos con el ruido ambiental
+                        if (spokenArray.includes(targetWord)) {
                             isHit = true;
                         }
-                    }
-
-                    // 2. Similitud Tolerante al 60% (Si la cantó raro, lo perdonamos)
-                    if (!isHit) {
-                        for (let spokenWord of spokenArray) {
-                            if (getSimilarity(spokenWord, targetWord) >= 0.60) {
-                                isHit = true;
-                                break;
+                    } else {
+                        // Palabras largas: Tolerancia de contener la palabra o Similitud Matemática (65%)
+                        if (normalizedSpoken.includes(targetWord)) {
+                            isHit = true;
+                        } else {
+                            for (let spokenWord of spokenArray) {
+                                if (getSimilarity(spokenWord, targetWord) >= 0.65) {
+                                    isHit = true;
+                                    break;
+                                }
                             }
-                        }
-                    }
-
-                    // 3. Fusión de sílabas ("mia" + "mor" = "miamor")
-                    if (!isHit && spokenArray.length > 0) {
-                        let fusedSpoken = spokenArray.join("");
-                        if (fusedSpoken.includes(targetWord)) {
-                            isHit = true;
                         }
                     }
 
                     if (isHit) {
                         processHit(i);
-                        // No rompemos el ciclo, por si cantó 2 palabras súper rápido de un solo golpe.
-                    } else if (i === nextWordIndex) {
-                        // Si falló en la que le tocaba, no permitimos que atine mágicamente las del futuro.
-                        break; 
                     }
                 }
             };
             
-            // Reanimador automático inteligente
             recognition.onend = () => { 
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
