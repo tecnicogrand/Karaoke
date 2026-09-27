@@ -193,7 +193,7 @@
         <!-- INDICADOR DE VERSIÓN -->
         <div class="mt-8 text-center flex flex-col items-center justify-center gap-2">
             <div class="flex items-center gap-2 text-slate-500/60 font-bold uppercase tracking-[0.2em] font-mono text-[10px]">
-                <span>Build v4.0.0 (Zero-Lag Engine)</span>
+                <span>Build v4.5 (Restored Pro Engine)</span>
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -231,7 +231,7 @@
 
         <!-- Panel de Monitor de Voz en Vivo -->
         <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/90 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
-            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor Zero-Lag v4.0 (Monitor Activo) <i class="fas fa-bolt text-yellow-400"></i></span>
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor de Tolerancia Híbrido (Monitor Activo) <i class="fas fa-bolt text-yellow-400"></i></span>
             <div id="live-transcript" class="text-white font-mono text-base h-12 flex items-center justify-center tracking-wider bg-black/50 rounded-lg border border-white/5">Esperando voz...</div>
         </div>
 
@@ -369,6 +369,34 @@
             transcriptPanel: document.getElementById('transcript-panel'),
             liveTranscript: document.getElementById('live-transcript')
         };
+
+        // Restauración de Función Matemática de Similitud
+        function getSimilarity(s1, s2) {
+            let longer = s1;
+            let shorter = s2;
+            if (s1.length < s2.length) { longer = s2; shorter = s1; }
+            let longerLength = longer.length;
+            if (longerLength == 0) return 1.0;
+            
+            let costs = new Array();
+            for (let i = 0; i <= longer.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= shorter.length; j++) {
+                    if (i == 0) costs[j] = j;
+                    else {
+                        if (j > 0) {
+                            let newValue = costs[j - 1];
+                            if (longer.charAt(i - 1) != shorter.charAt(j - 1))
+                                newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                            costs[j - 1] = lastValue;
+                            lastValue = newValue;
+                        }
+                    }
+                }
+                if (i > 0) costs[shorter.length] = lastValue;
+            }
+            return (longerLength - costs[shorter.length]) / parseFloat(longerLength);
+        }
 
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
         function showError(msg) { DOM.setupError.innerText = msg; DOM.setupError.classList.remove('hidden'); }
@@ -588,14 +616,14 @@
                 const timeToNextLine = nextLine.time - currentTime;
                 
                 const totalSilenceDuration = nextLine.time - (currentLine.time + estimatedSingingDuration);
+                const isCurrentlyInSilence = timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 0;
 
-                // Silencios > 3 segundos
-                if (totalSilenceDuration >= 3.0 && timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 0.15) {
+                // Reloj Instrumental Corregido (Hasta llegar al segundo 0)
+                if (totalSilenceDuration >= 3.0 && isCurrentlyInSilence) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
                     
-                    const elapsedSilence = totalSilenceDuration - timeToNextLine;
-                    let visualPct = Math.max(0, Math.min((elapsedSilence / totalSilenceDuration) * 100, 100));
+                    let visualPct = Math.max(0, Math.min(((totalSilenceDuration - timeToNextLine) / totalSilenceDuration) * 100, 100));
                     DOM.instFill.style.width = `${visualPct}%`;
                     
                     DOM.currentLyric.style.opacity = '0.2';
@@ -657,7 +685,7 @@
 
             } else if (currentLineIndex === -1 && lrcData.length > 0) {
                 let timeToNextLine = lrcData[0].time - currentTime;
-                if (timeToNextLine > 3.0 && timeToNextLine > 0.15) {
+                if (timeToNextLine > 3.0 && timeToNextLine > 0) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
                     let visualPct = Math.max(0, Math.min(((lrcData[0].time - timeToNextLine) / lrcData[0].time) * 100, 100));
@@ -715,9 +743,8 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // 1. EXTRACCIÓN ULTRA LIMPIA (Base cero)
-                // Tomamos únicamente los datos recientes, sin historiales pesados.
                 let currentInterim = "";
+                // Leemos solo los bloques recientes de la sesión actual de voz
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     currentInterim += event.results[i][0].transcript + " ";
                 }
@@ -725,48 +752,68 @@
                 let spokenRaw = currentInterim.trim();
                 if (!spokenRaw) return;
 
-                // 2. ACTUALIZACIÓN VISUAL (Hilo separado para no causar lag)
+                // Monitor en vivo sin lag
                 if (isTranscriptVisible) {
                     requestAnimationFrame(() => {
-                        let textToShow = spokenRaw.split(/\s+/).slice(-5).join(" "); // Muestra últimas 5 palabras
+                        let textToShow = spokenRaw.split(/\s+/).slice(-5).join(" ");
                         DOM.liveTranscript.innerText = textToShow || "Escuchando...";
                     });
                 }
 
-                // 3. MOTOR BASE FASE 1 (Comparación Directa y Rápida)
+                // MOTOR HÍBRIDO RESTAURADO (Rapidez + Tolerancia Matemática)
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 let normalizedSpoken = normalize(spokenRaw);
+                let spokenArray = normalizedSpoken.split(/\s+/);
                 
-                // Ubicamos en qué palabra de la frase vamos
+                // Ubicar dónde vamos en la frase real
                 let nextWordIndex = 0;
                 while(wordsSaidInLine.has(nextWordIndex) && nextWordIndex < targetWordsRaw.length) {
                     nextWordIndex++;
                 }
+                if (nextWordIndex >= targetWordsRaw.length) return; 
 
-                if (nextWordIndex >= targetWordsRaw.length) return; // Verso terminado
-
-                // Evaluamos máximo 2 palabras adelante para que no se pierda si vas rápido
-                let windowEnd = Math.min(targetWordsRaw.length, nextWordIndex + 2);
+                // Ventana deslizante para no atorar la PC
+                let windowEnd = Math.min(targetWordsRaw.length, nextWordIndex + 3);
 
                 for (let i = nextWordIndex; i < windowEnd; i++) {
                     if (wordsSaidInLine.has(i)) continue; 
                     
                     let targetWord = normalize(targetWordsRaw[i]);
+                    let isHit = false;
 
-                    // LÓGICA DIRECTA: Sin matemáticas pesadas (0 milisegundos de latencia)
-                    if (targetWord.length > 2) {
-                        // Si la palabra cantada existe directamente en la cadena de voz: Acierto.
-                        if (normalizedSpoken.includes(targetWord)) {
-                            processHit(i);
-                            break; // Detenemos para procesar la siguiente en el próximo frame
+                    // 1. Direct Match (Cero cálculos, velocidad luz)
+                    if (normalizedSpoken.includes(targetWord)) {
+                        if (targetWord.length > 2) {
+                            isHit = true;
+                        } else if (spokenArray.includes(targetWord)) {
+                            isHit = true;
                         }
-                    } else {
-                        // Si es palabra corta (y, a, de), exigimos que sea detectada como palabra separada
-                        let spokenArray = normalizedSpoken.split(/\s+/);
-                        if (spokenArray.includes(targetWord)) {
-                            processHit(i);
-                            break;
+                    }
+
+                    // 2. Similitud Tolerante al 60% (Si la cantó raro, lo perdonamos)
+                    if (!isHit) {
+                        for (let spokenWord of spokenArray) {
+                            if (getSimilarity(spokenWord, targetWord) >= 0.60) {
+                                isHit = true;
+                                break;
+                            }
                         }
+                    }
+
+                    // 3. Fusión de sílabas ("mia" + "mor" = "miamor")
+                    if (!isHit && spokenArray.length > 0) {
+                        let fusedSpoken = spokenArray.join("");
+                        if (fusedSpoken.includes(targetWord)) {
+                            isHit = true;
+                        }
+                    }
+
+                    if (isHit) {
+                        processHit(i);
+                        // No rompemos el ciclo, por si cantó 2 palabras súper rápido de un solo golpe.
+                    } else if (i === nextWordIndex) {
+                        // Si falló en la que le tocaba, no permitimos que atine mágicamente las del futuro.
+                        break; 
                     }
                 }
             };
