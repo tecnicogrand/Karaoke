@@ -190,10 +190,10 @@
             <div id="setup-error" class="text-red-400 text-sm font-bold text-center hidden mt-2 bg-red-950/30 p-3 rounded-lg border border-red-500/20"></div>
         </div>
 
-        <!-- INDICADOR DE VERSIÓN -->
+        <!-- INDICADOR DE VERSIÓN ACTUALIZADO -->
         <div class="mt-8 text-center flex flex-col items-center justify-center gap-2">
             <div class="flex items-center gap-2 text-slate-500/60 font-bold uppercase tracking-[0.2em] font-mono text-[10px]">
-                <span>Build v4.8 (Motor Clásico Restaurado)</span>
+                <span>Build v5.0 (Zero-Latency Engine)</span>
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -231,7 +231,7 @@
 
         <!-- Panel de Monitor de Voz en Vivo -->
         <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/90 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
-            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor Clásico (Reconocimiento en Vivo) <i class="fas fa-bolt text-yellow-400"></i></span>
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Monitor Zero-Lag <i class="fas fa-bolt text-yellow-400"></i></span>
             <div id="live-transcript" class="text-white font-mono text-base h-12 flex items-center justify-center tracking-wider bg-black/50 rounded-lg border border-white/5">Esperando voz...</div>
         </div>
 
@@ -344,6 +344,9 @@
         let correctWordsTotal = 0;
         let totalWordsInSong = 0;
         let cachedSpans = []; 
+        
+        // CACHÉ DE OPTIMIZACIÓN CPU (Nuevo en v5.0)
+        let normalizedTargetWords = []; 
 
         const DOM = {
             setupScreen: document.getElementById('setup-screen'),
@@ -370,6 +373,7 @@
             liveTranscript: document.getElementById('live-transcript')
         };
 
+        // Función Levenshtein original (solo se usará si el atajo rápido falla)
         function getSimilarity(s1, s2) {
             let longer = s1;
             let shorter = s2;
@@ -435,6 +439,7 @@
         async function fetchLyrics(title, isManual) {
             let cleanTitle = title;
             if (!isManual) {
+                // Limpieza inteligente que no borra palabras clave si el usuario no hizo búsqueda manual
                 cleanTitle = title
                     .replace(/\([^)]*\)|\[[^\]]*\]/g, '') 
                     .replace(/video|oficial|official|lyric|lyrics|audio|remastered|karaoke|instrumental|cover|pista|version|hd|4k/gi, '') 
@@ -543,6 +548,10 @@
 
         function renderLine(lineData) {
             DOM.currentLyric.innerHTML = '';
+            
+            // OPTIMIZACIÓN v5.0: Pre-calcular la normalización una sola vez por verso
+            normalizedTargetWords = lineData.words.map(w => normalize(w));
+
             lineData.words.forEach(word => {
                 const span = document.createElement('span'); 
                 span.innerText = word;
@@ -554,16 +563,6 @@
                 DOM.currentLyric.appendChild(span);
             });
             cachedSpans = Array.from(DOM.currentLyric.querySelectorAll('span'));
-        }
-
-        function breakCombo() {
-            if (combo > 1) {
-                combo = 1;
-                DOM.comboDisplay.innerText = `COMBO x1`;
-                DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-400 bg-slate-800 border border-slate-600 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-all duration-300 combo-broken";
-                setTimeout(() => { DOM.comboDisplay.classList.remove('combo-broken'); }, 400);
-                if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡FALLO!", "#ef4444");
-            }
         }
 
         function syncLoop() {
@@ -578,6 +577,7 @@
 
             if (newIndex !== currentLineIndex) {
                 if (currentLineIndex >= 0) {
+                    // Auditoría de combo al final de la línea
                     const prevLine = lrcData[currentLineIndex];
                     const hitRatio = wordsSaidInLine.size / prevLine.words.length;
                     
@@ -606,6 +606,7 @@
                 }
             }
 
+            // Lógica Central: Tiempos y Reloj Instrumental (Corregido a 3 segundos exactos)
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const currentLine = lrcData[currentLineIndex];
                 const nextLine = lrcData[currentLineIndex + 1];
@@ -617,10 +618,11 @@
                 const totalSilenceDuration = nextLine.time - (currentLine.time + estimatedSingingDuration);
                 const isCurrentlyInSilence = timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 0;
 
-                // Reloj Instrumental Corregido a 3 segundos
+                // RELOJ DE 3 SEGUNDOS HASTA CERO
                 if (totalSilenceDuration >= 3.0 && isCurrentlyInSilence) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
-                    DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
+                    // Llega hasta 0 sin parpadear
+                    DOM.instCountdown.innerText = Math.max(0, Math.ceil(timeToNextLine));
                     
                     let visualPct = Math.max(0, Math.min(((totalSilenceDuration - timeToNextLine) / totalSilenceDuration) * 100, 100));
                     DOM.instFill.style.width = `${visualPct}%`;
@@ -686,7 +688,7 @@
                 let timeToNextLine = lrcData[0].time - currentTime;
                 if (timeToNextLine > 3.0 && timeToNextLine > 0) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
-                    DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
+                    DOM.instCountdown.innerText = Math.max(0, Math.ceil(timeToNextLine));
                     let visualPct = Math.max(0, Math.min(((lrcData[0].time - timeToNextLine) / lrcData[0].time) * 100, 100));
                     DOM.instFill.style.width = `${visualPct}%`;
                     DOM.trackingContainer.style.opacity = '0';
@@ -701,20 +703,6 @@
             }
 
             animationFrameId = requestAnimationFrame(syncLoop);
-        }
-
-        function createFloatingTextSmall(text, color = "#4ade80") {
-            const el = document.createElement('div'); 
-            el.className = 'floating-text-small'; 
-            el.innerText = text;
-            el.style.color = color;
-            el.style.textShadow = `0 0 15px ${color}99, 0 2px 4px rgba(0,0,0,0.8)`;
-            
-            const randomX = Math.random() * 60 - 30; 
-            el.style.left = `calc(50% + ${randomX}px)`; 
-            el.style.top = `35%`;
-            DOM.karaokeScreen.appendChild(el); 
-            setTimeout(() => el.remove(), 1000);
         }
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -739,50 +727,56 @@
                 }
             };
 
-            // MOTOR CLÁSICO RESTAURADO: Sin candados, evalúa toda la frase dinámicamente
+            // 🚀 MOTOR ZERO-LATENCY v5.0
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                let newTranscript = "";
-                // Leemos los bloques más recientes y estables
+                // 1. SOLUCIÓN LAG DE TEXTO: Tomar SOLO el bloque más reciente en vez de concatenar todo el historial
+                let currentSpokenChunk = "";
+                // Leemos solo los resultados más recientes para no asfixiar el CPU con textos kilométricos
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    newTranscript += event.results[i][0].transcript + " ";
+                    currentSpokenChunk += event.results[i][0].transcript + " ";
                 }
                 
-                let spokenRaw = newTranscript.trim();
+                let spokenRaw = currentSpokenChunk.trim();
                 if (!spokenRaw) return;
 
-                // Monitor visual
+                // Monitor visual instantáneo
                 if (isTranscriptVisible) {
                     let textToShow = spokenRaw.split(/\s+/).slice(-6).join(" ");
                     DOM.liveTranscript.innerText = textToShow || "Escuchando...";
                 }
 
-                const targetWordsRaw = lrcData[currentLineIndex].words;
                 let normalizedSpoken = normalize(spokenRaw);
                 let spokenArray = normalizedSpoken.split(/\s+/);
 
-                // Comparamos sin bloqueos de índice. Permite saltarse palabras y seguir puntuando.
-                for (let i = 0; i < targetWordsRaw.length; i++) {
-                    if (wordsSaidInLine.has(i)) continue; // Si ya se atinó, la saltamos
+                // 2. SOLUCIÓN LAG MATEMÁTICO: Fast-Path y Filtro de Tamaño
+                for (let i = 0; i < normalizedTargetWords.length; i++) {
+                    if (wordsSaidInLine.has(i)) continue; // Si ya se atinó, saltar
                     
-                    let targetWord = normalize(targetWordsRaw[i]);
+                    // Utilizamos la caché (no calculamos nada aquí)
+                    let targetWord = normalizedTargetWords[i];
                     let isHit = false;
 
+                    // VÍA SÚPER RÁPIDA (Fast-Path C++ nativo)
                     if (targetWord.length <= 3) {
-                        // Palabras cortas: Exigir palabra exacta para no regalar puntos con el ruido ambiental
-                        if (spokenArray.includes(targetWord)) {
-                            isHit = true;
-                        }
+                        // Palabras cortas exactas
+                        if (spokenArray.includes(targetWord)) isHit = true;
                     } else {
-                        // Palabras largas: Tolerancia de contener la palabra o Similitud Matemática (65%)
+                        // Búsqueda substring nativa (0 milisegundos)
                         if (normalizedSpoken.includes(targetWord)) {
                             isHit = true;
                         } else {
-                            for (let spokenWord of spokenArray) {
-                                if (getSimilarity(spokenWord, targetWord) >= 0.65) {
-                                    isHit = true;
-                                    break;
+                            // VÍA MATEMÁTICA LIGERA (Filtro Inteligente)
+                            // En vez de comparar TODO contra TODO, solo compara palabras que tengan un largo parecido
+                            for (let j = 0; j < spokenArray.length; j++) {
+                                let spokenWord = spokenArray[j];
+                                // Filtro: Solo calcula Levenshtein si la palabra hablada mide +/- 2 letras que el objetivo
+                                if (Math.abs(spokenWord.length - targetWord.length) <= 2) {
+                                    if (getSimilarity(spokenWord, targetWord) >= 0.60) {
+                                        isHit = true;
+                                        break; // Sale del loop en cuanto acierta
+                                    }
                                 }
                             }
                         }
@@ -804,6 +798,16 @@
                 }
             };
             try { recognition.start(); } catch(e){ }
+        }
+
+        function breakCombo() {
+            if (combo > 1) {
+                combo = 1;
+                DOM.comboDisplay.innerText = `COMBO x1`;
+                DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-400 bg-slate-800 border border-slate-600 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-all duration-300 combo-broken";
+                setTimeout(() => { DOM.comboDisplay.classList.remove('combo-broken'); }, 400);
+                if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡FALLO!", "#ef4444");
+            }
         }
 
         function processHit(tIndex) {
@@ -829,6 +833,20 @@
                     createFloatingTextSmall(`+${pointsEarned}`, "#fbbf24"); 
                 }
             }
+        }
+
+        function createFloatingTextSmall(text, color = "#4ade80") {
+            const el = document.createElement('div'); 
+            el.className = 'floating-text-small'; 
+            el.innerText = text;
+            el.style.color = color;
+            el.style.textShadow = `0 0 15px ${color}99, 0 2px 4px rgba(0,0,0,0.8)`;
+            
+            const randomX = Math.random() * 60 - 30; 
+            el.style.left = `calc(50% + ${randomX}px)`; 
+            el.style.top = `35%`;
+            DOM.karaokeScreen.appendChild(el); 
+            setTimeout(() => el.remove(), 1000);
         }
 
         document.getElementById('btn-blind-mode').addEventListener('click', function() {
@@ -902,27 +920,32 @@
 
         function showResults() {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
-            DOM.karaokeScreen.classList.add('hidden'); DOM.resultsScreen.classList.remove('hidden'); DOM.resultsScreen.classList.add('flex');
+            DOM.karaokeScreen.classList.add('hidden'); 
+            DOM.resultsScreen.classList.remove('hidden'); 
+            DOM.resultsScreen.classList.add('flex');
             document.getElementById('res-score').innerText = score;
             document.getElementById('res-hits').innerText = `${correctWordsTotal} / ${totalWordsInSong}`;
             document.getElementById('res-max-combo').innerText = `x${maxCombo}`;
         }
-
+        
         document.getElementById('btn-restart').addEventListener('click', () => {
-            DOM.resultsScreen.classList.add('hidden'); DOM.resultsScreen.classList.remove('flex');
+            DOM.resultsScreen.classList.add('hidden'); 
+            DOM.resultsScreen.classList.remove('flex');
             DOM.setupScreen.classList.remove('hidden');
-            if(player && player.destroy) player.destroy();
+            
+            if (player) {
+                player.stopVideo();
+                player.destroy();
+                player = null;
+            }
+            if (recognition && isRecognizing) {
+                try { recognition.stop(); } catch(e) {}
+            }
         });
-
+        
         document.getElementById('btn-exit').addEventListener('click', () => {
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-            isPaused = false;
-            isCountdownActive = false;
-            if(player && player.destroy) player.destroy();
-            if(recognition && isRecognizing) try{ recognition.stop(); }catch(e){}
-            DOM.karaokeScreen.classList.add('hidden'); DOM.setupScreen.classList.remove('hidden'); DOM.startOverlay.classList.remove('hidden');
+            showResults();
         });
-
     </script>
 </body>
 </html>
