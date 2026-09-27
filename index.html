@@ -160,7 +160,7 @@
     </div>
 
     <!-- PANTALLA DE CONFIGURACIÓN DJ -->
-    <div id="setup-screen" class="glass-panel p-8 md:p-12 rounded-[2rem] w-full max-w-2xl z-10 flex flex-col justify-center transition-all">
+    <div id="setup-screen" class="glass-panel p-8 md:p-12 rounded-[2rem] w-full max-w-2xl z-10 flex flex-col justify-center transition-all relative">
         <div class="text-center mb-10">
             <h1 class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-100 via-yellow-400 to-amber-600 drop-shadow-lg mb-2 tracking-tight">
                 <i class="fas fa-crown text-yellow-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] mr-2"></i>KARAOKE
@@ -199,6 +199,18 @@
             </button>
             
             <div id="setup-error" class="text-red-400 text-sm font-bold text-center hidden mt-2 bg-red-950/30 p-3 rounded-lg border border-red-500/20"></div>
+        </div>
+
+        <!-- INDICADOR DE VERSIÓN -->
+        <div class="mt-8 text-center flex flex-col items-center justify-center gap-2">
+            <div class="flex items-center gap-2 text-slate-500/60 font-bold uppercase tracking-[0.2em] font-mono text-[10px]">
+                <span>Build v3.0.0 (Master)</span>
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span>Online</span>
+            </div>
         </div>
     </div>
 
@@ -332,6 +344,7 @@
         let syncOffset = 0; 
         let animationFrameId;
         let isPaused = false;
+        let isCountdownActive = false; // Prevención de bug al pausar múltiples veces
         
         let isTvModeActive = false;
         let isBlindModeActive = false; 
@@ -605,6 +618,7 @@
                 }
             }
 
+            // EVALUACIÓN DE TIEMPO Y DIBUJADO DE LETRAS
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const currentLine = lrcData[currentLineIndex];
                 const nextLine = lrcData[currentLineIndex + 1];
@@ -616,7 +630,7 @@
                 // Silencio total calculado desde el fin del verso hasta el inicio del otro
                 const totalSilenceDuration = nextLine.time - (currentLine.time + estimatedSingingDuration);
 
-                // MEGA FIX: Evaluamos si el silencio TOTAL es > 3s. Mantenemos el reloj hasta que timeToNextLine sea casi 0.
+                // MEGA FIX (Intermedio Musical): Mantenemos el reloj estricto hasta que llegue a <= 0.15s
                 if (totalSilenceDuration >= 3.0 && timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 0.15) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
@@ -686,7 +700,7 @@
             } else if (currentLineIndex === -1 && lrcData.length > 0) {
                 let timeToNextLine = lrcData[0].time - currentTime;
                 // Intro de más de 3 segundos
-                if (timeToNextLine > 3.0) {
+                if (timeToNextLine > 3.0 && timeToNextLine > 0.15) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
                     let visualPct = Math.max(0, Math.min(((lrcData[0].time - timeToNextLine) / lrcData[0].time) * 100, 100));
@@ -745,9 +759,9 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // VENTANA DE AUDIO CONTINUA: Leemos el bloque actual y los dos anteriores para evitar cortes de sílabas.
+                // VENTANA DE AUDIO CORTA: Analizar solo los bloques recientes (Zero-Lag)
                 let newTranscript = "";
-                let startIdx = Math.max(0, event.results.length - 2); 
+                let startIdx = Math.max(0, event.resultIndex - 1); 
                 for (let i = startIdx; i < event.results.length; ++i) {
                     newTranscript += event.results[i][0].transcript + " ";
                 }
@@ -782,7 +796,7 @@
                         (cleanTarget.length > 3 && (sw.includes(cleanTarget) || (sw.length >= 4 && cleanTarget.includes(sw))))
                     );
 
-                    // 2. Diccionario Fonético de Quejidos
+                    // 2. Diccionario Fonético de Quejidos (Palabras Cortas)
                     if (matchedSpokenIndex === -1 && cleanTarget.length <= 4) {
                          const phonetics = {"ay": "^(ai|ahi|hay|aay|i)$", "oh": "^(o|ho|ooh|u)$", "eh": "^(e|he)$", "ah": "^(a|ha)$", "y": "^(i|e)$", "yeah": "^(iea|ya|ie|yea|yeh|ea|ia)$"};
                          if (phonetics[cleanTarget]) {
@@ -791,9 +805,9 @@
                          }
                     }
 
-                    // 3. Fusión y Tolerancia (55%)
-                    if (matchedSpokenIndex === -1 && cleanTarget.length >= 3) {
-                        let requiredSim = cleanTarget.length <= 4 ? 0.50 : 0.55;
+                    // 3. Fusión y Tolerancia (50% cortas, 60% normales)
+                    if (matchedSpokenIndex === -1 && cleanTarget.length >= 2) {
+                        let requiredSim = cleanTarget.length <= 4 ? 0.50 : 0.60;
                         
                         for(let i = 0; i < spokenWords.length; i++) {
                             let sWord = spokenWords[i];
@@ -803,7 +817,7 @@
                                 matchedSpokenIndex = i; break;
                             }
                             
-                            // Unir palabras rotas
+                            // Unir palabras rotas (Fusión Inteligente)
                             if(i < spokenWords.length - 1) {
                                 let combined = sWord + spokenWords[i+1];
                                 if (Math.abs(combined.length - cleanTarget.length) <= 3 && getSimilarity(cleanTarget, combined) >= requiredSim) {
@@ -821,7 +835,7 @@
                 }
             };
             
-            // Inmortalizador de Micrófono
+            // Inmortalizador de Micrófono (Gestor de Estados)
             recognition.onend = () => { 
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
@@ -859,7 +873,6 @@
             }
         }
 
-        // --- EVENT LISTENERS UI ---
         document.getElementById('btn-blind-mode').addEventListener('click', function() {
             isBlindModeActive = !isBlindModeActive;
             const icon = this.querySelector('i');
@@ -887,14 +900,19 @@
 
         document.getElementById('btn-pause').addEventListener('click', () => {
             if (isPaused) {
+                if(isCountdownActive) return; // Prevenir bug de doble pausa
+                isCountdownActive = true;
                 DOM.countdownScreen.classList.remove('hidden');
                 let count = 3; document.getElementById('countdown-number').innerText = count;
                 const countInterval = setInterval(() => {
                     count--;
                     if (count > 0) document.getElementById('countdown-number').innerText = count;
                     else {
-                        clearInterval(countInterval); DOM.countdownScreen.classList.add('hidden');
-                        isPaused = false; player.playVideo();
+                        clearInterval(countInterval); 
+                        DOM.countdownScreen.classList.add('hidden');
+                        isCountdownActive = false;
+                        isPaused = false; 
+                        player.playVideo();
                         if(!isRecognizing && recognition) try{ recognition.start(); }catch(e){}
                     }
                 }, 1000);
@@ -941,6 +959,7 @@
         document.getElementById('btn-exit').addEventListener('click', () => {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             isPaused = false;
+            isCountdownActive = false;
             if(player && player.destroy) player.destroy();
             if(recognition && isRecognizing) try{ recognition.stop(); }catch(e){}
             DOM.karaokeScreen.classList.add('hidden'); DOM.setupScreen.classList.remove('hidden'); DOM.startOverlay.classList.remove('hidden');
