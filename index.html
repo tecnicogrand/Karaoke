@@ -53,12 +53,12 @@
         .lyric-line { transition: opacity 0.3s ease; min-height: 12vh; }
         
         .lyric-active {
-            font-size: clamp(2.5rem, 5.5vw, 6.5rem); /* Letra más grande para proyectores */
+            font-size: clamp(2.5rem, 5.5vw, 6.5rem); 
             font-weight: 900;
             display: flex; flex-wrap: wrap; justify-content: center; 
-            line-height: 1.6; /* Mayor separación vertical */
+            line-height: 1.6; 
             filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.95));
-            gap: 2rem 5vw; /* Separación horizontal enorme (5vw) para evitar amontonamiento */
+            gap: 2rem 5vw; 
         }
 
         .lyric-active span {
@@ -66,7 +66,7 @@
             background: white;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            padding: 0.5rem 1rem; /* Colchón para que al crecer la palabra no se corte */
+            padding: 0.5rem 1rem; 
             margin: 0 0.2rem;
             will-change: transform, filter, background;
             transition: transform 0.1s linear, background 0.1s linear, opacity 0.3s ease; 
@@ -217,7 +217,7 @@
 
         <!-- Panel de Monitoreo de Voz Debug -->
         <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/80 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
-            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-satellite-dish animate-pulse"></i> Cadena de Voz Capturada</span>
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-satellite-dish animate-pulse"></i> Cadena de Voz Capturada en Tiempo Real</span>
             <div id="live-transcript" class="text-white/90 font-mono text-base h-16 overflow-y-auto flex items-center justify-center italic tracking-wider">Esperando tu voz...</div>
         </div>
 
@@ -326,7 +326,6 @@
         let correctWordsTotal = 0;
         let totalWordsInSong = 0;
         let cachedSpans = []; 
-        let currentMicrophoneTranscript = ""; 
 
         const DOM = {
             setupScreen: document.getElementById('setup-screen'),
@@ -416,7 +415,6 @@
 
         async function fetchLyrics(title, isManual) {
             let cleanTitle = title;
-            // Si es manual, respeta las palabras exactas. Si no, limpia basura de YT.
             if (!isManual) {
                 cleanTitle = title
                     .replace(/\([^)]*\)|\[[^\]]*\]/g, '') 
@@ -545,7 +543,7 @@
                 DOM.comboDisplay.innerText = `COMBO x1`;
                 DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-400 bg-slate-800 border border-slate-600 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-all duration-300 combo-broken";
                 setTimeout(() => { DOM.comboDisplay.classList.remove('combo-broken'); }, 400);
-                if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡FALLO!", "#ef4444");
+                if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡COMBO ROTO!", "#ef4444");
             }
         }
 
@@ -559,7 +557,7 @@
             let newIndex = lrcData.findIndex(line => line.time > currentTime) - 1;
             if (newIndex === -2) newIndex = lrcData.length - 1; 
 
-            // AL CAMBIAR DE LÍNEA: Evaluar Combo por Verso (Justicia al 50%)
+            // AL CAMBIAR DE LÍNEA: Evaluar Rendimiento del Verso Anterior
             if (newIndex !== currentLineIndex) {
                 if (currentLineIndex >= 0) {
                     DOM.prevLyricText.innerText = lrcData[currentLineIndex].text;
@@ -567,13 +565,14 @@
                     const prevLine = lrcData[currentLineIndex];
                     const hitRatio = wordsSaidInLine.size / prevLine.words.length;
                     
-                    if (wordsSaidInLine.size > 0 && hitRatio > 0.5) {
+                    // Solo mantenemos el combo si atinó a más del 50% del verso
+                    if (wordsSaidInLine.size > 0 && hitRatio >= 0.5) {
                         if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡VERSO OK!", "#4ade80");
-                    } else if (wordsSaidInLine.size > 0 || prevLine.words.length > 0) {
+                    } else if (prevLine.words.length > 0) {
                         breakCombo();
                     }
                     
-                    // Marcar en gris (apagar) las palabras que omitió el usuario
+                    // Marcar en gris las palabras que no atinó
                     cachedSpans.forEach(span => {
                         if (!span.classList.contains('hit-word')) {
                             span.style.opacity = '0.25';
@@ -584,8 +583,6 @@
 
                 currentLineIndex = newIndex; 
                 wordsSaidInLine.clear(); 
-                currentMicrophoneTranscript = ""; 
-                if(isTranscriptVisible) DOM.liveTranscript.innerText = "Escuchando...";
                 currentActiveWordIndex = 0;
                 
                 if (currentLineIndex >= 0) {
@@ -602,7 +599,7 @@
                 const timeSinceLineStart = currentTime - currentLine.time;
                 const timeToNextLine = nextLine.time - currentTime;
 
-                // Lógica de Silencio Intermedio (Solo aparece cuando ya terminaste de cantar el verso actual)
+                // Lógica de Silencio Intermedio (Aparece tras terminar el verso, si hay > 4 seg libres)
                 if (timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 4.0) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
@@ -618,21 +615,11 @@
                     DOM.trackingContainer.style.opacity = '1'; 
                 }
 
-                // Progreso Fluido de la Barra de Seguimiento
                 const progress = Math.max(0, Math.min(timeSinceLineStart / estimatedSingingDuration, 1));
                 
                 if(cachedSpans.length > 0) {
                     const exactProgress = progress * cachedSpans.length;
-                    const indexToLightUp = Math.floor(exactProgress);
-                    
-                    // Romper combo en vivo si se salta una palabra muy atrasada (margen de 1.5 palabras)
-                    if (currentActiveWordIndex < indexToLightUp - 1) {
-                        for(let k = currentActiveWordIndex; k < indexToLightUp - 1; k++) {
-                            if (!wordsSaidInLine.has(k)) breakCombo();
-                        }
-                    }
-                    
-                    currentActiveWordIndex = indexToLightUp;
+                    currentActiveWordIndex = Math.floor(exactProgress);
                     
                     for(let i=0; i < cachedSpans.length; i++) {
                         let span = cachedSpans[i];
@@ -710,10 +697,10 @@
             if (!SpeechRecognition) return;
             
             recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX'; // Acento nativo para evitar traducciones lentas
+            recognition.lang = 'es-MX'; 
             recognition.continuous = true; 
             recognition.interimResults = true;
-            recognition.maxAlternatives = 3; // Multiverso de interpretaciones
+            recognition.maxAlternatives = 1; // 1 sola alternativa acelera el procesamiento
 
             recognition.onstart = () => { isRecognizing = true; };
 
@@ -727,18 +714,22 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                let latestTranscript = "";
-                // Juntar todas las alternativas (El Multiverso) en una super-cadena
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    for(let j = 0; j < event.results[i].length; j++) {
-                        latestTranscript += " " + event.results[i][j].transcript;
-                    }
+                // 1. Extraer solo los últimos resultados para que el array sea pequeño y súper rápido (CERO LAG)
+                let transcriptThisTick = "";
+                let startIndex = Math.max(0, event.results.length - 8); 
+                for (let i = startIndex; i < event.results.length; ++i) {
+                    transcriptThisTick += event.results[i][0].transcript + " ";
                 }
                 
-                currentMicrophoneTranscript += " " + normalize(latestTranscript);
+                transcriptThisTick = normalize(transcriptThisTick);
                 
+                // Convertir la voz capturada en un Array limpio
+                let spokenWords = transcriptThisTick.split(/\s+/).filter(w => w.length > 0);
+                
+                // Actualizar Panel Debug sin que se trabe la pantalla
                 if (isTranscriptVisible) {
-                    DOM.liveTranscript.innerText = currentMicrophoneTranscript.trim() || "Escuchando...";
+                    let displayWords = spokenWords.slice(-15).join(" ");
+                    DOM.liveTranscript.innerText = displayWords || "Escuchando...";
                     DOM.liveTranscript.scrollTop = DOM.liveTranscript.scrollHeight;
                 }
                 
@@ -746,73 +737,57 @@
                 
                 targetWordsRaw.forEach((tWord, tIndex) => {
                     if (wordsSaidInLine.has(tIndex)) return; 
-                    if (tIndex > currentActiveWordIndex + 1) return; // Candado: Evita predecir el futuro
+                    
+                    // Solo permitimos aciertos en la palabra actual o 2 adelante (Cantantes rápidos)
+                    if (tIndex > currentActiveWordIndex + 2) return; 
                     
                     const cleanTarget = normalize(tWord);
-                    
-                    // --- NUEVO: SOPORTE EXTREMO PARA PALABRAS CORTAS / EXCLAMACIONES ---
-                    if (cleanTarget.length <= 3) {
-                        const regex = new RegExp(`\\b${cleanTarget}\\b`);
-                        if (regex.test(currentMicrophoneTranscript)) {
-                            processHit(tIndex);
-                            currentMicrophoneTranscript = currentMicrophoneTranscript.replace(regex, "");
-                        } else {
-                            // Diccionario fonético para los quejidos que Chrome escucha raro
-                            const phonetics = {"ay": "\\b(?:ai|ahi|hay)\\b", "oh": "\\b(?:o|ho)\\b", "eh": "\\b(?:e|he)\\b", "ah": "\\b(?:a|ha)\\b", "y": "\\b(?:i)\\b"};
-                            if (phonetics[cleanTarget]) {
-                                const regexPhon = new RegExp(phonetics[cleanTarget]);
-                                if (regexPhon.test(currentMicrophoneTranscript)) {
-                                    processHit(tIndex);
-                                    currentMicrophoneTranscript = currentMicrophoneTranscript.replace(regexPhon, "");
-                                }
-                            }
-                        }
-                        return; 
+                    let matchedSpokenIndex = -1;
+                    let wordsToConsume = 1; // Cuántas piezas del array consumiremos
+
+                    // A) Coincidencia Exacta Inmediata
+                    matchedSpokenIndex = spokenWords.findIndex(sw => sw === cleanTarget);
+
+                    // B) Diccionario de Exclamaciones (Ah, Oh, Yeah)
+                    if (matchedSpokenIndex === -1 && cleanTarget.length <= 4) {
+                         const phonetics = {"ay": "^(ai|ahi|hay|aay)$", "oh": "^(o|ho|ooh)$", "eh": "^(e|he)$", "ah": "^(a|ha)$", "y": "^(i)$", "yeah": "^(iea|ya|ie|yea|yeh|ea)$"};
+                         if (phonetics[cleanTarget]) {
+                             const regexPhon = new RegExp(phonetics[cleanTarget]);
+                             matchedSpokenIndex = spokenWords.findIndex(sw => regexPhon.test(sw));
+                         }
                     }
-                    
-                    let foundMatch = false;
-                    let targetToConsume = "";
 
-                    const exactRegex = new RegExp(`\\b${cleanTarget}\\b`);
-
-                    if (exactRegex.test(currentMicrophoneTranscript)) {
-                        foundMatch = true; targetToConsume = exactRegex;
-                    } 
-                    else if (currentMicrophoneTranscript.includes(cleanTarget)) {
-                        foundMatch = true; targetToConsume = cleanTarget;
-                    } 
-                    else {
-                        const wordsInTranscript = currentMicrophoneTranscript.split(/\s+/).filter(w => w.length >= 2);
-                        
-                        // Umbral súper tolerante para palabras medias (como "Yeah", "Amor", "Vida" <= 4 letras)
+                    // C) Coincidencia Matemática y Unión de Sílabas Rotas (Tolerancia Dinámica 50-60%)
+                    if (matchedSpokenIndex === -1 && cleanTarget.length >= 3) {
                         let requiredSim = cleanTarget.length <= 4 ? 0.50 : 0.60;
                         
-                        // Comparación matemática Levenshtein rápida
-                        for(let i = 0; i < wordsInTranscript.length; i++) {
-                            let sWord = wordsInTranscript[i];
+                        for(let i = 0; i < spokenWords.length; i++) {
+                            let sWord = spokenWords[i];
                             
-                            if (Math.abs(sWord.length - cleanTarget.length) <= 3) {
-                                if (getSimilarity(cleanTarget, sWord) >= requiredSim) {
-                                    foundMatch = true; targetToConsume = sWord; break;
-                                }
+                            // Saltar micro-sílabas basura para la matemática
+                            if(sWord.length < 2 && cleanTarget.length > 3) continue;
+
+                            if (Math.abs(sWord.length - cleanTarget.length) <= 3 && getSimilarity(cleanTarget, sWord) >= requiredSim) {
+                                matchedSpokenIndex = i; break;
                             }
                             
-                            // Unir palabras rotas (Si Chrome escucha "co" y "razon")
-                            if(i < wordsInTranscript.length - 1) {
-                                let combined = sWord + wordsInTranscript[i+1];
-                                if (Math.abs(combined.length - cleanTarget.length) <= 3) {
-                                    if (getSimilarity(cleanTarget, combined) >= requiredSim) {
-                                        foundMatch = true; targetToConsume = combined; break;
-                                    }
+                            // Unir piezas si Chrome rompió la palabra (ej: "co" + "razon")
+                            if(i < spokenWords.length - 1) {
+                                let combined = sWord + spokenWords[i+1];
+                                if (Math.abs(combined.length - cleanTarget.length) <= 3 && getSimilarity(cleanTarget, combined) >= requiredSim) {
+                                    matchedSpokenIndex = i; 
+                                    wordsToConsume = 2; // Tenemos que borrar ambas sílabas
+                                    break; 
                                 }
                             }
                         }
                     }
 
-                    if (foundMatch) {
+                    // Procesar el acierto
+                    if (matchedSpokenIndex !== -1) {
                         processHit(tIndex);
-                        // Consumir la palabra para que un mismo sonido no marque 2 palabras del futuro
-                        currentMicrophoneTranscript = currentMicrophoneTranscript.replace(targetToConsume, "");
+                        // ¡CLAVE! Borrar la palabra del array para no re-usarla y evitar lag
+                        spokenWords.splice(matchedSpokenIndex, wordsToConsume);
                     }
                 });
             };
@@ -821,12 +796,11 @@
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
                     clearTimeout(recognitionRestartTimeout);
-                    // Resucitar el micro si se cae
                     recognitionRestartTimeout = setTimeout(() => { 
                         if(!isRecognizing) {
                             try { recognition.start(); } catch(e){} 
                         }
-                    }, 150);
+                    }, 150); // Timeout elevado a 150ms para no asfixiar a Chrome
                 }
             };
             try { recognition.start(); } catch(e){ }
@@ -849,7 +823,6 @@
                 
                 DOM.scoreDisplay.innerText = score; 
                 DOM.comboDisplay.innerText = `COMBO x${combo}`;
-                // Reconstrucción del color brillante cuando hay combo
                 DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(251,191,36,0.6)]";
                 
                 if(!isTvModeActive && !isBlindModeActive) {
