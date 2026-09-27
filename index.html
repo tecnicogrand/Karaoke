@@ -370,33 +370,6 @@
             liveTranscript: document.getElementById('live-transcript')
         };
 
-        function getSimilarity(s1, s2) {
-            let longer = s1; let shorter = s2;
-            if (s1.length < s2.length) { longer = s2; shorter = s1; }
-            let longerLength = longer.length;
-            if (longerLength === 0) return 1.0; 
-            if (shorter.length === 0) return 0.0;
-            
-            let costs = new Array();
-            for (let i = 0; i <= longer.length; i++) {
-                let lastValue = i;
-                for (let j = 0; j <= shorter.length; j++) {
-                    if (i === 0) costs[j] = j;
-                    else {
-                        if (j > 0) {
-                            let newValue = costs[j - 1];
-                            if (s1.charAt(i - 1) !== s2.charAt(j - 1))
-                                newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-                            costs[j - 1] = lastValue;
-                            lastValue = newValue;
-                        }
-                    }
-                }
-                if (i > 0) costs[shorter.length] = lastValue;
-            }
-            return (longerLength - costs[shorter.length]) / parseFloat(longerLength);
-        }
-
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
         function showError(msg) { DOM.setupError.innerText = msg; DOM.setupError.classList.remove('hidden'); }
 
@@ -742,7 +715,8 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // 1. RECOPILACIÓN INMEDIATA DEL NUEVO BLOQUE (Zero-Lag)
+                // 1. EXTRACCIÓN ULTRA LIMPIA (Base cero)
+                // Tomamos únicamente los datos recientes, sin historiales pesados.
                 let currentInterim = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     currentInterim += event.results[i][0].transcript + " ";
@@ -751,60 +725,48 @@
                 let spokenRaw = currentInterim.trim();
                 if (!spokenRaw) return;
 
-                // 2. ACTUALIZACIÓN VISUAL DESACOPLADA DEL HILO MATEMÁTICO
+                // 2. ACTUALIZACIÓN VISUAL (Hilo separado para no causar lag)
                 if (isTranscriptVisible) {
                     requestAnimationFrame(() => {
-                        let textToShow = spokenRaw.split(/\s+/).slice(-6).join(" ");
+                        let textToShow = spokenRaw.split(/\s+/).slice(-5).join(" "); // Muestra últimas 5 palabras
                         DOM.liveTranscript.innerText = textToShow || "Escuchando...";
                     });
                 }
 
-                // 3. FUSIÓN SINTÁCTICA (La clave de la precisión v4.0)
-                let normalizedSpoken = normalize(spokenRaw);
-                let spokenJoined = normalizedSpoken.replace(/\s+/g, ''); // Transforma "mi amor" en "miamor"
-
+                // 3. MOTOR BASE FASE 1 (Comparación Directa y Rápida)
                 const targetWordsRaw = lrcData[currentLineIndex].words;
+                let normalizedSpoken = normalize(spokenRaw);
                 
-                // Restringimos la ventana a la línea dorada
-                let lowestUnhit = 0;
-                while(wordsSaidInLine.has(lowestUnhit) && lowestUnhit < targetWordsRaw.length) {
-                    lowestUnhit++;
+                // Ubicamos en qué palabra de la frase vamos
+                let nextWordIndex = 0;
+                while(wordsSaidInLine.has(nextWordIndex) && nextWordIndex < targetWordsRaw.length) {
+                    nextWordIndex++;
                 }
 
-                let windowStart = lowestUnhit; 
-                let windowEnd = Math.min(targetWordsRaw.length - 1, lowestUnhit + 2); // Solo 2 palabras por delante
+                if (nextWordIndex >= targetWordsRaw.length) return; // Verso terminado
 
-                for (let tIndex = windowStart; tIndex <= windowEnd; tIndex++) {
-                    if (wordsSaidInLine.has(tIndex)) continue; 
+                // Evaluamos máximo 2 palabras adelante para que no se pierda si vas rápido
+                let windowEnd = Math.min(targetWordsRaw.length, nextWordIndex + 2);
+
+                for (let i = nextWordIndex; i < windowEnd; i++) {
+                    if (wordsSaidInLine.has(i)) continue; 
                     
-                    const cleanTarget = normalize(targetWordsRaw[tIndex]);
-                    let matched = false;
+                    let targetWord = normalize(targetWordsRaw[i]);
 
-                    // A) VÍA ULTRA RÁPIDA: Búsqueda de Inclusión (Supera los espacios mal puestos de Chrome)
-                    if (spokenJoined.includes(cleanTarget) && cleanTarget.length >= 2) {
-                        matched = true;
-                    } 
-                    // B) REGLA PARA PALABRAS CORTAS (Ay, Oh, Y)
-                    else if (cleanTarget.length < 2) {
-                        let spokenArray = normalizedSpoken.split(/\s+/);
-                        if(spokenArray.includes(cleanTarget)) matched = true;
-                    }
-                    // C) VÍA MATEMÁTICA (Tolerancia a fallas de pronunciación o ruido BOSE)
-                    else {
-                        let spokenArray = normalizedSpoken.split(/\s+/);
-                        for (let sWord of spokenArray) {
-                            // Filtro de tamaño para no hacer matemáticas innecesarias
-                            if (Math.abs(sWord.length - cleanTarget.length) <= 2) {
-                                if (getSimilarity(cleanTarget, sWord) >= 0.65) {
-                                    matched = true; break;
-                                }
-                            }
+                    // LÓGICA DIRECTA: Sin matemáticas pesadas (0 milisegundos de latencia)
+                    if (targetWord.length > 2) {
+                        // Si la palabra cantada existe directamente en la cadena de voz: Acierto.
+                        if (normalizedSpoken.includes(targetWord)) {
+                            processHit(i);
+                            break; // Detenemos para procesar la siguiente en el próximo frame
                         }
-                    }
-
-                    if (matched) {
-                        processHit(tIndex);
-                        break; // Bloqueo para no comerse 2 palabras con el mismo sonido a la vez
+                    } else {
+                        // Si es palabra corta (y, a, de), exigimos que sea detectada como palabra separada
+                        let spokenArray = normalizedSpoken.split(/\s+/);
+                        if (spokenArray.includes(targetWord)) {
+                            processHit(i);
+                            break;
+                        }
                     }
                 }
             };
