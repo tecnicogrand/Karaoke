@@ -19,7 +19,7 @@
             padding: 0;
         }
 
-        /* Fondos Animados Elegantes (Sin Lag) */
+        /* Fondos Animados Elegantes (Sin Lag - Aceleración por hardware) */
         .animated-bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
@@ -40,12 +40,16 @@
             100% { transform: translate(8vw, 8vh) scale(1.1); }
         }
 
-        /* Paneles de Cristal Minimalistas */
         .glass-panel {
             background: rgba(15, 23, 42, 0.5); 
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Utilidad Transición Ocultamiento (Modo Ciego) */
+        .smooth-hide {
+            transition: opacity 0.5s ease-in-out;
         }
 
         /* Configuración de Letras Premium y Responsivas */
@@ -55,7 +59,6 @@
             font-size: clamp(2rem, 5vw, 5rem);
             font-weight: 900;
             display: flex; flex-wrap: wrap; justify-content: center; 
-            gap: clamp(1rem, 2vw, 2rem);
             line-height: 1.4;
             filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.95));
         }
@@ -66,7 +69,8 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             padding: 0.2rem 0;
-            will-change: background, transform;
+            margin: 0 0.4rem; /* Separación calculada para no chocar al crecer */
+            will-change: background, transform, filter;
             transition: transform 0.1s ease-out; 
         }
 
@@ -83,12 +87,14 @@
         /* NUEVA ANIMACIÓN DE ACIERTO (Estilo Arcade Rápido y Brillante) */
         @keyframes hitPopPro {
             0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(74, 222, 128, 0)); }
-            20% { transform: scale(1.25) translateY(-8px) rotate(-1deg); filter: drop-shadow(0 0 40px rgba(74, 222, 128, 1)); }
+            20% { transform: scale(1.2) translateY(-10px) rotate(-2deg); filter: drop-shadow(0 0 40px rgba(74, 222, 128, 1)); }
             100% { transform: scale(1.05) translateY(-2px) rotate(0deg); filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.7)); }
         }
         
         .hit-word {
-            animation: hitPopPro 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: hitPopPro 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            background: #4ade80 !important; /* Verde Neón Fijo */
+            -webkit-background-clip: text !important;
         }
 
         /* Medallas de Combo */
@@ -111,11 +117,11 @@
         #youtube-player-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; }
         .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at center, rgba(2,6,23,0.7) 0%, rgba(2,6,23,0.95) 100%); z-index: -1; }
 
-        /* Barra de Progreso Elegante */
+        /* Barra de Progreso Fluida */
         .tracking-bar {
-            width: 100%; max-w-4xl; height: 6px; 
+            width: 100%; max-width: 900px; height: 6px; 
             background: rgba(255, 255, 255, 0.05); 
-            border-radius: 999px; margin-top: 2.5rem; 
+            border-radius: 999px; margin: 2rem auto 0 auto; 
             border: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden; opacity: 0; transition: opacity 0.4s;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
@@ -184,26 +190,27 @@
                 <input type="text" id="manual-query" class="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/30 transition-all text-sm shadow-inner placeholder-slate-600" placeholder="Ej: Luis Miguel - La Incondicional">
             </div>
             
-            <!-- Selector de Micrófono Dinámico -->
-            <div class="group">
-                <label class="block text-xs font-bold text-cyan-400 mb-1.5 ml-1 uppercase tracking-wider flex justify-between">
-                    <span><i class="fas fa-microphone-alt mr-1"></i> Entrada de Audio (Voz)</span>
+            <!-- Panel Informativo de Micrófono -->
+            <div class="group bg-slate-900/40 p-4 rounded-xl border border-cyan-700/30 shadow-inner">
+                <label class="block text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-microphone-alt"></i> Estado del Micrófono
                 </label>
-                <select id="mic-select" class="w-full bg-slate-900/60 border border-cyan-700/30 rounded-xl px-5 py-4 text-slate-200 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/30 transition-all text-sm appearance-none cursor-pointer shadow-inner">
-                    <option value="">Buscando equipos de audio...</option>
-                </select>
-                <p class="text-[10px] text-slate-500 mt-2 ml-1 italic"><i class="fas fa-info-circle"></i> Selecciona tu mezcladora externa, audífonos o micro. Si falla, da clic en el candadito 🔒 en la URL y permite el micrófono.</p>
+                <p class="text-[11px] text-slate-300 mb-1">Para que las puntuaciones funcionen, el navegador necesita permiso.</p>
+                <div class="bg-black/30 p-2 rounded flex items-center gap-3 border border-slate-700/50">
+                    <i class="fas fa-lock text-yellow-500 text-lg"></i>
+                    <p class="text-[10px] text-slate-400 leading-tight">Haz clic en el <b>candadito 🔒 en la URL</b> de tu navegador, dale Permitir al micrófono, y en la "Configuración de sitios" elige tu entrada (Laptop o Tarjeta de sonido externa).</p>
+                </div>
             </div>
 
-            <!-- Modo VDJ -->
-            <div class="mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-700/40 hover:bg-slate-800/60 transition-colors cursor-pointer group flex items-center" onclick="document.getElementById('vdj-mode-toggle').click()">
+            <!-- Modo TV (Vista Limpia) -->
+            <div class="mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-700/40 hover:bg-slate-800/60 transition-colors cursor-pointer group flex items-center" onclick="document.getElementById('tv-mode-toggle').click()">
                 <div class="relative flex items-center justify-center">
-                    <input type="checkbox" id="vdj-mode-toggle" class="peer sr-only">
-                    <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                    <input type="checkbox" id="tv-mode-toggle" class="peer sr-only">
+                    <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
                 </div>
                 <div class="ml-4">
-                    <span class="text-white font-bold text-sm flex items-center gap-2">Modo Escenario <span class="bg-yellow-500/20 text-yellow-400 text-[9px] px-2 py-0.5 rounded-full border border-yellow-500/30 uppercase tracking-widest">Sin Puntuación</span></span>
-                    <span class="text-[11px] text-slate-400 block mt-0.5">Apaga el micrófono web. Ideal si tu DJ Controller causa conflicto de drivers.</span>
+                    <span class="text-white font-bold text-sm flex items-center gap-2">Modo TV (Vista Limpia) <span class="bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest">Para Proyector</span></span>
+                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta los puntos y combos de la pantalla. Seguirá escuchando y calificando en secreto.</span>
                 </div>
             </div>
             
@@ -211,30 +218,38 @@
                 Preparar Escenario
             </button>
             <button id="btn-help" class="w-full text-slate-500 hover:text-slate-300 font-medium py-2 transition-colors text-xs flex items-center justify-center gap-2 mt-1">
-                <i class="fas fa-plug"></i> Ayuda de Conexión de Audio BOSE T4S
+                <i class="fas fa-project-diagram"></i> Guía de Conexión y Audio
             </button>
             
             <div id="setup-error" class="text-red-400 text-sm font-bold text-center hidden mt-2 bg-red-950/30 p-3 rounded-lg border border-red-500/20"></div>
         </div>
     </div>
 
-    <!-- MODAL DE AYUDA (BOSE T4S) -->
+    <!-- MODAL DE AYUDA -->
     <div id="help-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 backdrop-blur-lg transition-opacity">
         <div class="glass-panel p-8 rounded-2xl max-w-2xl w-full border-cyan-500/20 relative overflow-y-auto max-h-[90vh]">
             <button id="btn-close-help" class="absolute top-4 right-4 text-slate-500 hover:text-white text-xl"><i class="fas fa-times"></i></button>
-            <h2 class="text-xl font-black text-cyan-400 mb-6 flex items-center gap-2"><i class="fas fa-project-diagram"></i> Configuración BOSE T4S</h2>
+            <h2 class="text-xl font-black text-cyan-400 mb-6 flex items-center gap-2"><i class="fas fa-plug"></i> Configuración de Audio Pro</h2>
             
             <div class="space-y-4 text-sm text-slate-300">
-                <p class="text-slate-400 mb-4 text-xs">Si usas una Mezcladora BOSE T4S, tu PC no recibe la voz de los micrófonos a menos que conectes el "retorno digital".</p>
+                <p class="text-slate-400 mb-4 text-xs">Para que el reconocimiento de voz sea exacto, tu PC debe escuchar los micrófonos nítidamente.</p>
                 
+                <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700/50 mb-3">
+                    <h3 class="text-yellow-400 font-bold mb-2 flex items-center gap-2"><i class="fab fa-usb"></i> Conexión BOSE T4S / Digital (Recomendada)</h3>
+                    <p class="text-[11px] mb-2">Conecta un cable USB desde el puerto "PC" de tu consola BOSE a tu Laptop.</p>
+                    <ol class="list-decimal pl-4 space-y-1 text-xs text-slate-400">
+                        <li>En la BOSE, gira la rueda a <b>Prefs</b> > <b>USB B to PC</b>.</li>
+                        <li>Pon L y R en <b>Master</b> (presiona Select).</li>
+                        <li>En tu Laptop, selecciona la BOSE como tu micrófono principal.</li>
+                    </ol>
+                </div>
+
                 <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700/50">
-                    <h3 class="text-yellow-400 font-bold mb-3 flex items-center gap-2"><i class="fab fa-usb"></i> Conexión USB Digital (Cero Latencia)</h3>
-                    <ol class="list-decimal pl-4 space-y-2 text-xs leading-relaxed">
-                        <li>Conecta un cable USB tipo impresora desde el puerto <b>PC</b> de la BOSE a tu Laptop.</li>
-                        <li>En tu BOSE, gira la rueda principal a <b>Prefs</b> y busca <b>USB B to PC</b>.</li>
-                        <li>Configura "Left" y "Right" para que digan <b>Master</b> (y presiona Select).</li>
-                        <li>En tu Laptop (Windows), ve a Sonidos > Entrada, y selecciona <b>Bose T4S</b>.</li>
-                        <li><i>*En Chrome, da clic en el candadito 🔒 de la URL y asegúrate de permitir el micrófono.</i></li>
+                    <h3 class="text-cyan-400 font-bold mb-2 flex items-center gap-2"><i class="fas fa-laptop"></i> Usar el micrófono de la Laptop</h3>
+                    <p class="text-[11px] mb-2">Si no tienes cables de audio de retorno, Chrome intentará usar el micrófono ambiental de tu PC.</p>
+                    <ol class="list-decimal pl-4 space-y-1 text-xs text-slate-400">
+                        <li>Pon tu Laptop cerca de las bocinas principales.</li>
+                        <li>Ve a las opciones de Sonido de Windows y desactiva las <b>Mejoras de Audio / Cancelación de eco</b>.</li>
                     </ol>
                 </div>
             </div>
@@ -252,17 +267,17 @@
         <div id="youtube-player-container"></div>
         <div class="overlay"></div>
 
-        <!-- HUD: Monitor de Micrófono -->
-        <div id="mic-debug-panel" class="absolute top-6 left-6 md:top-8 md:left-8 w-56 glass-panel p-3 rounded-xl z-20 border-l-2 border-l-cyan-400">
+        <!-- HUD: Monitor de Micrófono (smooth-hide para modo Ciego/TV) -->
+        <div id="mic-debug-panel" class="absolute top-6 left-6 md:top-8 md:left-8 w-56 glass-panel p-3 rounded-xl z-20 border-l-2 border-l-cyan-400 smooth-hide">
             <div class="flex items-center justify-between border-b border-white/5 pb-1 mb-2">
-                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1"><i class="fas fa-wave-square"></i> Monitor Mic</span>
+                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1"><i class="fas fa-wave-square"></i> Teleprompter AI</span>
                 <div id="mic-status-dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
             </div>
             <div id="mic-debug-text" class="text-[11px] text-cyan-300 font-medium italic min-h-[1.5rem] leading-tight truncate">Esperando conexión...</div>
         </div>
 
-        <!-- HUD: Puntuación -->
-        <div id="hud-panel" class="absolute top-6 right-6 md:top-8 md:right-8 text-right z-20">
+        <!-- HUD: Puntuación (smooth-hide para modo Ciego/TV) -->
+        <div id="hud-panel" class="absolute top-6 right-6 md:top-8 md:right-8 text-right z-20 smooth-hide">
             <div class="text-5xl md:text-7xl font-black text-white drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] tracking-tighter" id="score-display">0</div>
             <div class="text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full" id="combo-display">COMBO x1</div>
         </div>
@@ -275,19 +290,21 @@
         </div>
 
         <div id="countdown-screen" class="absolute inset-0 flex items-center justify-center bg-black/80 z-40 hidden backdrop-blur-md">
-            <div id="countdown-number" class="text-[12rem] font-black text-white drop-shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse">3</div>
+            <div id="countdown-number" class="text-[15rem] font-black text-white drop-shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse">3</div>
         </div>
 
-        <!-- Contenedor Central de Letras -->
-        <div id="lyrics-container" class="text-center w-[95%] md:w-4/5 z-10 mt-8">
+        <!-- Contenedor Central de Letras (smooth-hide para Modo Ciego) -->
+        <div id="lyrics-container" class="text-center w-[95%] md:w-4/5 z-10 mt-8 smooth-hide">
             <div id="prev-lyric-container" class="lyric-prev">
                 <span id="prev-lyric-text" class="truncate max-w-xl"></span>
                 <span id="prev-lyric-badge"></span>
             </div>
             
             <div class="relative flex flex-col items-center justify-center w-full">
+                <!-- AQUI VAN LAS PALABRAS -->
                 <div id="current-lyric" class="lyric-line lyric-active"></div>
                 
+                <!-- BARRA INFERIOR FLUIDA -->
                 <div id="tracking-line-container" class="tracking-bar">
                     <div id="tracking-line-fill" class="tracking-fill">
                         <div class="tracking-head"></div>
@@ -300,8 +317,14 @@
 
         <!-- Panel DJ Inferior -->
         <div id="controls-panel" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass-panel rounded-2xl p-2 flex items-center gap-1 md:gap-2 z-20 border-t border-white/5">
-            <button id="btn-toggle-mic" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-cyan-400 transition flex items-center justify-center shrink-0" title="Ver Monitor">
-                <i class="fas fa-microphone"></i>
+            <!-- Botón Ocultar UI (Nuevo) -->
+            <button id="btn-toggle-ui" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-cyan-400 transition flex items-center justify-center shrink-0" title="Ver Monitor AI">
+                <i class="fas fa-desktop"></i>
+            </button>
+
+            <!-- BOTÓN MODO CIEGO (EL OJO) -->
+            <button id="btn-blind-mode" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-purple-400 transition flex items-center justify-center shrink-0 ml-1" title="Modo Reto Ciego (Ocultar Todo)">
+                <i class="fas fa-eye"></i>
             </button>
 
             <button id="btn-pause" class="w-12 h-12 bg-yellow-500/90 hover:bg-yellow-400 rounded-xl text-slate-900 text-lg font-black transition shadow-[0_0_15px_rgba(251,191,36,0.3)] flex items-center justify-center mx-2">
@@ -310,6 +333,7 @@
 
             <div class="w-px h-6 bg-white/10 mx-1"></div>
 
+            <!-- Botones DJ Sync Micro-Afinación (0.2s) -->
             <button id="btn-sync-m" class="px-3 py-2 bg-slate-800/50 hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-300 transition" title="Atrasar Letra">-0.2s</button>
             <div class="flex flex-col items-center justify-center px-1 min-w-[60px]">
                 <span class="text-[8px] text-yellow-500/80 font-bold uppercase tracking-widest mb-0.5">DJ Sync</span>
@@ -356,16 +380,21 @@
 
     <!-- API DE YOUTUBE -->
     <script src="https://www.youtube.com/iframe_api"></script>
+    
     <script>
+        // /* VARIABLES GLOBALES DE ESTADO */
         let lrcData = [];
         let currentLineIndex = -1;
-        let currentActiveWordIndex = 0; 
+        let currentActiveWordIndex = 0; // Vital para evitar bug del futuro
         let player;
         let videoId = "";
         let syncOffset = 0; 
         let animationFrameId;
         let isPaused = false;
-        let isVdjModeActive = false;
+        
+        // Modos Especiales
+        let isTvModeActive = false;
+        let isBlindModeActive = false; // Modo Ciego
         
         let score = 0; let combo = 1; let maxCombo = 1;
         let wordsSaidInLine = new Set();
@@ -392,11 +421,12 @@
             micDebugText: document.getElementById('mic-debug-text'),
             micStatusDot: document.getElementById('mic-status-dot'),
             syncDisplay: document.getElementById('sync-display'),
-            micSelect: document.getElementById('mic-select'),
             trackingContainer: document.getElementById('tracking-line-container'),
-            trackingFill: document.getElementById('tracking-line-fill')
+            trackingFill: document.getElementById('tracking-line-fill'),
+            lyricsContainer: document.getElementById('lyrics-container')
         };
 
+        // /* UTILIDADES MATEMÁTICAS / STRING */
         function getSimilarity(s1, s2) {
             let longer = s1; let shorter = s2;
             if (s1.length < s2.length) { longer = s2; shorter = s1; }
@@ -426,33 +456,11 @@
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '').toLowerCase();
         function showError(msg) { DOM.setupError.innerText = msg; DOM.setupError.classList.remove('hidden'); }
 
-        async function loadMicrophones() {
-            try {
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const audioInputs = devices.filter(device => device.kind === 'audioinput');
-                
-                DOM.micSelect.innerHTML = '';
-                if(audioInputs.length === 0) {
-                    DOM.micSelect.innerHTML = '<option value="">No se detectan micrófonos</option>';
-                    return;
-                }
-                
-                audioInputs.forEach((device, index) => {
-                    const option = document.createElement('option');
-                    option.value = device.deviceId;
-                    option.text = device.label || `Entrada de Audio ${index + 1}`;
-                    DOM.micSelect.appendChild(option);
-                });
-            } catch (e) {
-                DOM.micSelect.innerHTML = '<option value="">Permiso bloqueado. Usa el candadito 🔒 en URL</option>';
-            }
-        }
-        window.addEventListener('load', loadMicrophones);
-
+        // Botones UI Básicos
         document.getElementById('btn-help').addEventListener('click', () => DOM.helpModal.classList.remove('hidden'));
         document.getElementById('btn-close-help').addEventListener('click', () => DOM.helpModal.classList.add('hidden'));
 
+        // Extractor YT
         function extractVideoId(url) {
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
             const match = url.match(regex);
@@ -505,7 +513,7 @@
             DOM.setupError.classList.add('hidden');
             const url = document.getElementById('youtube-url').value.trim();
             const manualQuery = document.getElementById('manual-query').value.trim();
-            isVdjModeActive = document.getElementById('vdj-mode-toggle').checked;
+            isTvModeActive = document.getElementById('tv-mode-toggle').checked;
 
             if (!url) return showError("Pega un link de YouTube válido.");
             videoId = extractVideoId(url);
@@ -525,15 +533,19 @@
 
                 document.getElementById('loading-text').innerText = "Montando Escenario...";
                 
-                if(isVdjModeActive) {
-                    DOM.hudPanel.classList.add('hidden');
-                    DOM.micDebugPanel.classList.add('hidden');
-                    document.getElementById('btn-toggle-mic').classList.add('hidden');
+                // Configurar visibilidad según Modo TV
+                if(isTvModeActive) {
+                    DOM.hudPanel.classList.add('opacity-0');
+                    DOM.micDebugPanel.classList.add('opacity-0');
                 } else {
-                    DOM.hudPanel.classList.remove('hidden');
-                    DOM.micDebugPanel.classList.remove('hidden');
-                    document.getElementById('btn-toggle-mic').classList.remove('hidden');
+                    DOM.hudPanel.classList.remove('opacity-0');
+                    DOM.micDebugPanel.classList.remove('opacity-0');
                 }
+                
+                // Reiniciar Modo Ciego (Siempre off al inicio)
+                isBlindModeActive = false;
+                DOM.lyricsContainer.classList.remove('opacity-0');
+                document.querySelector('#btn-blind-mode i').className = 'fas fa-eye text-purple-400';
 
                 setupYouTubePlayer();
             } catch (error) {
@@ -584,7 +596,7 @@
                     clearInterval(countInterval);
                     DOM.countdownScreen.classList.add('hidden');
                     player.playVideo();
-                    if(!isVdjModeActive) initMicForScoring(); 
+                    initMicForScoring(); // El mic SIEMPRE escucha, aunque no se vea
                     if(animationFrameId) cancelAnimationFrame(animationFrameId);
                     animationFrameId = requestAnimationFrame(syncLoop); 
                 }
@@ -605,7 +617,7 @@
             cachedSpans = Array.from(DOM.currentLyric.querySelectorAll('span'));
         }
 
-        // BUCLE PRINCIPAL A 60FPS (Optimizado para Cero Lag)
+        // BUCLE PRINCIPAL A 60FPS (Optimizado para Fluidez)
         function syncLoop() {
             if (isPaused || !player || typeof player.getCurrentTime !== 'function') {
                 animationFrameId = requestAnimationFrame(syncLoop); return;
@@ -629,7 +641,7 @@
                 }
             }
 
-            // Fluidez de palabras
+            // Fluidez de palabras y barra
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
                 const startTime = lrcData[currentLineIndex].time; 
                 const endTime = lrcData[currentLineIndex + 1].time;
@@ -639,25 +651,16 @@
                 
                 if(cachedSpans.length > 0) {
                     const exactProgress = progress * cachedSpans.length;
-                    currentActiveWordIndex = Math.floor(exactProgress);
+                    currentActiveWordIndex = Math.floor(exactProgress); // Actualiza la variable global
                     
                     for(let i=0; i < cachedSpans.length; i++) {
                         let span = cachedSpans[i];
-                        let isHit = wordsSaidInLine.has(i);
                         
-                        // EFECTO VERDE INSTANTÁNEO SI ACIERTA
-                        if (isHit) {
-                            if (span.dataset.state !== 'hit') {
-                                span.style.background = '#4ade80'; // Verde Sólido
-                                span.style.webkitBackgroundClip = 'text'; 
-                                span.classList.add('hit-word');
-                                span.dataset.state = 'hit';
-                            }
-                            continue; // Ignorar gradiente si ya es hit
-                        }
-
-                        let targetBaseColor = '#fbbf24'; // Dorado normal
-
+                        // Si la palabra ya fue cantada correctamente (hit), se queda verde y salta
+                        if (span.classList.contains('hit-word')) continue;
+                        
+                        let targetBaseColor = '#fbbf24'; // Dorado
+                        
                         if (i < currentActiveWordIndex) {
                             if (span.dataset.state !== 'past') {
                                 span.style.background = targetBaseColor;
@@ -667,6 +670,7 @@
                             }
                         } else if (i === currentActiveWordIndex) {
                             const fillPct = (exactProgress - currentActiveWordIndex) * 100;
+                            // Gradiente fluido letal
                             span.style.background = `linear-gradient(to right, ${targetBaseColor} ${fillPct}%, white ${fillPct}%)`;
                             span.style.webkitBackgroundClip = 'text'; 
                             span.style.transform = `scale(${1 + (0.06 * (fillPct/100))})`; 
@@ -692,7 +696,7 @@
         }
 
         function evaluateLine(indexToEval) {
-            if (indexToEval < 0 || isVdjModeActive) return;
+            if (indexToEval < 0) return;
             
             const targetWords = lrcData[indexToEval].words.length;
             if (targetWords === 0) return;
@@ -709,20 +713,28 @@
 
             if (percent >= 60) {
                 points = 300 * combo; badgeHtml = `<i class="fas fa-star text-yellow-100"></i> PERFECTO`; badgeClass += "badge-perfect";
-                combo++; linesHit++; createFloatingText(`+${points}`);
+                combo++; linesHit++; 
+                if(!isTvModeActive && !isBlindModeActive) createFloatingText(`+${points}`);
             } else if (percent >= 30) {
                 points = 150 * combo; badgeHtml = `<i class="fas fa-fire text-pink-100"></i> EXCELENTE`; badgeClass += "badge-excellent";
-                combo++; linesHit++; createFloatingText(`+${points}`);
+                combo++; linesHit++; 
+                if(!isTvModeActive && !isBlindModeActive) createFloatingText(`+${points}`);
             } else if (hitCount > 0) {
                 points = 50 * combo; badgeHtml = `<i class="fas fa-thumbs-up text-blue-100"></i> BIEN`; badgeClass += "badge-good";
-                combo = 1; linesHit++; createFloatingText(`+${points}`);
+                combo = 1; linesHit++; 
+                if(!isTvModeActive && !isBlindModeActive) createFloatingText(`+${points}`);
             } else { combo = 1; }
 
             if(combo > maxCombo) maxCombo = combo;
             score += points; DOM.scoreDisplay.innerText = score; DOM.comboDisplay.innerText = `COMBO x${combo}`;
 
-            if (points > 0) { DOM.prevLyricBadge.className = badgeClass; DOM.prevLyricBadge.innerHTML = badgeHtml; } 
-            else { DOM.prevLyricBadge.className = ""; DOM.prevLyricBadge.innerHTML = ""; }
+            if (points > 0 && !isTvModeActive && !isBlindModeActive) { 
+                DOM.prevLyricBadge.className = badgeClass; 
+                DOM.prevLyricBadge.innerHTML = badgeHtml; 
+            } else { 
+                DOM.prevLyricBadge.className = ""; 
+                DOM.prevLyricBadge.innerHTML = ""; 
+            }
         }
 
         function createFloatingText(text) {
@@ -741,13 +753,14 @@
             }
             
             recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX'; // Acento México: Crítico para velocidad
+            recognition.lang = 'es-MX'; // Acento México: Crítico para latencia cero
             recognition.continuous = true; 
             recognition.interimResults = true;
+            recognition.maxAlternatives = 3; // Multiverso: 3 posibles lecturas de voz
 
             recognition.onstart = () => {
                 DOM.micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_10px_#4ade80]";
-                DOM.micDebugText.innerText = "🟢 Escuchando audio...";
+                DOM.micDebugText.innerText = "🟢 Escuchando BOSE...";
             };
 
             recognition.onerror = (e) => {
@@ -756,57 +769,125 @@
             };
 
             recognition.onresult = (event) => {
-                if (currentLineIndex < 0 || isPaused || isVdjModeActive) return;
+                if (currentLineIndex < 0 || isPaused) return;
 
-                let transcript = "";
+                // Armar una super-cadena con todas las alternativas de voz capturadas
+                let availableSaidWords = [];
+                let debugText = "";
+                
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    transcript += event.results[i][0].transcript + " ";
+                    debugText = event.results[i][0].transcript; // Mostrar solo la principal
+                    for(let j = 0; j < event.results[i].length; j++) {
+                        let transcript = event.results[i][j].transcript;
+                        availableSaidWords.push(...normalize(transcript).split(/\s+/).filter(w => w.length >= 2));
+                    }
                 }
                 
-                DOM.micDebugText.innerText = `🎤 "${transcript.trim().substring(0, 30)}..."`;
+                DOM.micDebugText.innerText = `🎤 "${debugText.trim().substring(0, 30)}..."`;
                 
-                const normalizedTranscript = normalize(transcript);
-                const saidWords = normalizedTranscript.split(/\s+/).filter(w => w.length >= 2);
-                
-                // SISTEMA DE CONSUMO (Word Splice) para evitar duplicados en memoria
-                let availableSaidWords = [...saidWords];
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 
+                // Evaluar palabras con Candado del Futuro y Word Consuming
                 targetWordsRaw.forEach((tWord, tIndex) => {
                     if (wordsSaidInLine.has(tIndex)) return; 
                     
-                    // CANDADO DEL TIEMPO: Solo avala la palabra actual o 1 adelante (Nunca el futuro)
+                    // CANDADO DEL FUTURO: Solo valida la palabra actual o 1 adelante
                     if (tIndex > currentActiveWordIndex + 1) return; 
                     
                     const cleanTarget = normalize(tWord);
                     if (cleanTarget.length < 2) {
-                        if (availableSaidWords.length > 0) wordsSaidInLine.add(tIndex);
+                        if (availableSaidWords.length > 0) processHit(tIndex);
                         return; 
                     }
                     
-                    // FAST-PATH: Coincidencia Inmediata (Latencia Cero)
+                    // FAST-PATH: Coincidencia Exacta
                     let matchedIndex = availableSaidWords.findIndex(sWord => sWord === cleanTarget || sWord.includes(cleanTarget) || cleanTarget.includes(sWord));
                     
-                    // FALLBACK: Motor Matemático (Similitud 55% tolerante al ruido)
+                    // FALLBACK: Motor Matemático (Similitud 55%)
                     if (matchedIndex === -1) {
                         matchedIndex = availableSaidWords.findIndex(sWord => getSimilarity(cleanTarget, sWord) >= 0.55);
                     }
 
                     if (matchedIndex !== -1) {
-                        wordsSaidInLine.add(tIndex); // Guardar Hit
-                        availableSaidWords.splice(matchedIndex, 1); // ¡CONSUMIR! (Borra la palabra para que no sirva para el futuro)
+                        processHit(tIndex);
+                        availableSaidWords.splice(matchedIndex, 1); // ¡CONSUMIR PALABRA! (Para no repetir)
                     }
                 });
             };
             
-            // Watchdog Anti-Caídas
+            // Watchdog Anti-Caídas (50ms)
             recognition.onend = () => { 
-                if (!DOM.karaokeScreen.classList.contains('hidden') && !isVdjModeActive && !isPaused) {
+                if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
                     setTimeout(() => { try { recognition.start(); } catch(e){} }, 50);
                 }
             };
             try { recognition.start(); } catch(e){ }
         }
+
+        function processHit(tIndex) {
+            wordsSaidInLine.add(tIndex); // Guardar Hit
+            
+            // Disparar animación instantánea en el DOM
+            if(cachedSpans[tIndex] && !cachedSpans[tIndex].classList.contains('hit-word')) {
+                // Forzamos un reflow mínimo removiendo estilos previos
+                cachedSpans[tIndex].style = ""; 
+                cachedSpans[tIndex].classList.add('hit-word');
+                cachedSpans[tIndex].dataset.state = 'hit';
+            }
+        }
+
+        
+        // MODO CIEGO (Ocultar Todo)
+        document.getElementById('btn-blind-mode').addEventListener('click', function() {
+            isBlindModeActive = !isBlindModeActive;
+            const icon = this.querySelector('i');
+            
+            if(isBlindModeActive) {
+                // Activar ciego
+                icon.className = 'fas fa-eye-slash text-red-400';
+                DOM.lyricsContainer.classList.add('opacity-0');
+                DOM.hudPanel.classList.add('opacity-0');
+            } else {
+                // Desactivar ciego
+                icon.className = 'fas fa-eye text-purple-400';
+                DOM.lyricsContainer.classList.remove('opacity-0');
+                if(!isTvModeActive) DOM.hudPanel.classList.remove('opacity-0');
+            }
+        });
+
+        // Alternar Monitor Mic
+        document.getElementById('btn-toggle-ui').addEventListener('click', () => {
+            DOM.micDebugPanel.classList.toggle('opacity-0');
+        });
+
+        // Pausar Evento
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            if (isPaused) {
+                DOM.countdownScreen.classList.remove('hidden');
+                let count = 3; document.getElementById('countdown-number').innerText = count;
+                const countInterval = setInterval(() => {
+                    count--;
+                    if (count > 0) document.getElementById('countdown-number').innerText = count;
+                    else {
+                        clearInterval(countInterval); DOM.countdownScreen.classList.add('hidden');
+                        isPaused = false; player.playVideo();
+                        try{ recognition.start(); }catch(e){}
+                    }
+                }, 1000);
+            } else {
+                isPaused = true; player.pauseVideo();
+                if(recognition) try{ recognition.stop(); }catch(e){}
+            }
+        });
+
+        function updateSyncDisplay() {
+            const sign = syncOffset >= 0 ? "+" : "";
+            DOM.syncDisplay.innerText = `${sign}${syncOffset.toFixed(1)}s`;
+        }
+
+        // DJ SYNC Micro-Afinación (0.2s)
+        document.getElementById('btn-sync-m').addEventListener('click', () => { syncOffset -= 0.2; updateSyncDisplay(); });
+        document.getElementById('btn-sync-p').addEventListener('click', () => { syncOffset += 0.2; updateSyncDisplay(); });
 
         function showResults() {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -821,36 +902,6 @@
             DOM.setupScreen.classList.remove('hidden');
             if(player && player.destroy) player.destroy();
         });
-
-        document.getElementById('btn-toggle-mic').addEventListener('click', () => DOM.micDebugPanel.classList.toggle('hidden'));
-
-        document.getElementById('btn-pause').addEventListener('click', () => {
-            if (isPaused) {
-                DOM.countdownScreen.classList.remove('hidden');
-                let count = 3; document.getElementById('countdown-number').innerText = count;
-                const countInterval = setInterval(() => {
-                    count--;
-                    if (count > 0) document.getElementById('countdown-number').innerText = count;
-                    else {
-                        clearInterval(countInterval); DOM.countdownScreen.classList.add('hidden');
-                        isPaused = false; player.playVideo();
-                        if(!isVdjModeActive) try{ recognition.start(); }catch(e){}
-                    }
-                }, 1000);
-            } else {
-                isPaused = true; player.pauseVideo();
-                if(!isVdjModeActive && recognition) try{ recognition.stop(); }catch(e){}
-            }
-        });
-
-        function updateSyncDisplay() {
-            const sign = syncOffset >= 0 ? "+" : "";
-            DOM.syncDisplay.innerText = `${sign}${syncOffset.toFixed(1)}s`;
-        }
-
-        // DJ SYNC Micro-Afinación (0.2s)
-        document.getElementById('btn-sync-m').addEventListener('click', () => { syncOffset -= 0.2; updateSyncDisplay(); });
-        document.getElementById('btn-sync-p').addEventListener('click', () => { syncOffset += 0.2; updateSyncDisplay(); });
 
         document.getElementById('btn-exit').addEventListener('click', () => {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
