@@ -50,16 +50,36 @@
             transition: opacity 0.5s ease-in-out;
         }
 
-        .lyric-line { transition: opacity 0.3s ease; min-height: 12vh; }
+        /* DISEÑO PROFESIONAL DE LETRAS (PANTALLA CENTRADA) */
+        #lyrics-container {
+            height: 65vh; 
+        }
+
+        .lyric-prev {
+            color: rgba(255, 255, 255, 0.25); 
+            font-size: clamp(1.2rem, 2.5vw, 2.5rem);
+            font-weight: 700; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            letter-spacing: 0.05em;
+        }
+
+        .lyric-next {
+            color: rgba(255, 255, 255, 0.35); 
+            font-size: clamp(1.4rem, 2.8vw, 2.8rem);
+            font-weight: 700; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            letter-spacing: 0.05em;
+        }
         
         .lyric-active {
-            font-size: clamp(2.5rem, 5.5vw, 6.5rem); 
+            font-size: clamp(2rem, 4.5vw, 5rem); 
             font-weight: 900;
-            display: flex; flex-wrap: wrap; justify-content: center; 
-            line-height: 1.6; 
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+            line-height: 1.4; 
             filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.95));
-            gap: 2rem 5vw; 
+            gap: 1.2rem 3.5vw; 
             padding: 0 2vw;
+            width: 100%;
         }
 
         .lyric-active span {
@@ -67,30 +87,21 @@
             background: white;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            padding: 0.8rem 1.5rem; 
-            margin: 0.5rem 0.5rem;
+            padding: 0.2rem 0.5rem; 
+            margin: 0.1rem;
             will-change: transform, filter, background;
             transition: transform 0.1s linear, background 0.1s linear, opacity 0.3s ease; 
         }
 
-        .lyric-next {
-            color: rgba(255, 255, 255, 0.3); font-size: clamp(1.5rem, 3.5vw, 3rem);
-            font-weight: 700; margin-top: 4vh; text-shadow: 0 4px 10px rgba(0,0,0,0.9);
-        }
-
-        .lyric-prev {
-            color: rgba(255, 255, 255, 0.25); font-size: clamp(1.2rem, 2.5vw, 2rem);
-            margin-bottom: 3vh; display: flex; align-items: center; justify-content: center; gap: 1rem;
-        }
-
+        /* ANIMACIÓN DE ACIERTO (ARCADE HIT) */
         @keyframes arcadeHit {
             0% { transform: scale(1.06) translateY(0); filter: drop-shadow(0 0 0px rgba(74, 222, 128, 0)); }
-            30% { transform: scale(1.25) translateY(-15px) rotate(-2deg); filter: drop-shadow(0 0 50px rgba(74, 222, 128, 1)); }
-            100% { transform: scale(1.06) translateY(0) rotate(0deg); filter: drop-shadow(0 0 25px rgba(74, 222, 128, 0.7)); }
+            40% { transform: scale(1.3) translateY(-10px) rotate(-3deg); filter: drop-shadow(0 0 40px rgba(74, 222, 128, 1)); }
+            100% { transform: scale(1.06) translateY(0) rotate(0deg); filter: drop-shadow(0 0 25px rgba(74, 222, 128, 0.8)); }
         }
         
         .hit-word {
-            animation: arcadeHit 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            animation: arcadeHit 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
             background: #4ade80 !important; 
             -webkit-background-clip: text !important;
             opacity: 1 !important;
@@ -102,7 +113,7 @@
         .tracking-bar {
             width: 100%; max-width: 1000px; height: 8px; 
             background: rgba(255, 255, 255, 0.05); 
-            border-radius: 999px; margin: 3rem auto 0 auto; 
+            border-radius: 999px; margin: 2rem auto 0 auto; 
             border: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden; opacity: 0; transition: opacity 0.4s;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
@@ -180,7 +191,7 @@
                 </div>
                 <div class="ml-4">
                     <span class="text-white font-bold text-sm flex items-center gap-2">Modo TV (Vista Limpia) <span class="bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest">Recomendado</span></span>
-                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta los puntos en pantalla. Ideal para proyectar a tu audiencia.</span>
+                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta marcadores en pantalla para proyectores. Te sigue calificando.</span>
                 </div>
             </div>
             
@@ -216,37 +227,43 @@
             <div id="countdown-number" class="text-[15rem] font-black text-white drop-shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse">3</div>
         </div>
 
-        <!-- Panel de Monitoreo de Voz Debug -->
-        <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/80 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
-            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor de Reconocimiento Zero-Lag <i class="fas fa-bolt text-yellow-400"></i></span>
-            <div id="live-transcript" class="text-white/90 font-mono text-base h-16 flex items-center justify-center italic tracking-wider">Esperando voz...</div>
+        <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/90 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-2xl hidden z-40 text-center backdrop-blur-md shadow-2xl transition-all">
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-bolt text-yellow-400"></i> Motor Zero-Lag (Monitor en Vivo) <i class="fas fa-bolt text-yellow-400"></i></span>
+            <div id="live-transcript" class="text-white font-mono text-base h-12 flex items-center justify-center tracking-wider bg-black/50 rounded-lg border border-white/5">Esperando voz...</div>
         </div>
 
-        <div id="lyrics-container" class="text-center w-[95%] md:w-5/6 lg:w-4/5 z-10 mt-8 smooth-hide relative transition-opacity duration-500">
+        <div id="lyrics-container" class="flex flex-col items-center justify-between w-[95%] md:w-5/6 lg:w-4/5 z-10 mt-8 smooth-hide relative transition-opacity duration-500">
             
-            <div id="instrumental-timer" class="absolute -top-32 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0 transition-opacity duration-500 w-full max-w-sm pointer-events-none">
-                <span class="text-cyan-400 font-bold uppercase tracking-widest text-xs mb-2"><i class="fas fa-headphones-alt"></i> Intermedio Musical</span>
-                <div class="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
-                    <div id="instrumental-fill" class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_15px_#22d3ee] w-0 transition-all duration-100 ease-linear"></div>
-                </div>
-                <span class="text-white font-black text-2xl mt-2 drop-shadow-md">Cantas en: <span id="instrumental-countdown" class="text-cyan-300">3</span>s</span>
-            </div>
-
-            <div id="prev-lyric-container" class="lyric-prev">
-                <span id="prev-lyric-text" class="truncate max-w-2xl"></span>
+            <!-- Verso Anterior -->
+            <div id="prev-lyric-container" class="w-full flex-1 flex items-end justify-center pb-4 md:pb-8 opacity-100 transition-opacity duration-500">
+                <span id="prev-lyric-text" class="lyric-prev px-4 overflow-hidden text-ellipsis whitespace-nowrap w-full text-center"></span>
             </div>
             
-            <div class="relative flex flex-col items-center justify-center w-full">
-                <div id="current-lyric" class="lyric-line lyric-active"></div>
+            <!-- Verso Actual Central -->
+            <div class="relative flex flex-col items-center justify-center w-full flex-[2] z-20">
                 
-                <div id="tracking-line-container" class="tracking-bar">
+                <!-- Timer Instrumental Central -->
+                <div id="instrumental-timer" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center opacity-0 transition-opacity duration-500 w-full max-w-sm pointer-events-none z-30">
+                    <span class="text-cyan-400 font-bold uppercase tracking-widest text-xs mb-3"><i class="fas fa-headphones-alt"></i> Intermedio Musical</span>
+                    <div class="w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 relative shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                        <div id="instrumental-fill" class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_15px_#22d3ee] w-0 transition-all duration-100 ease-linear"></div>
+                    </div>
+                    <span class="text-white font-black text-3xl mt-3 drop-shadow-[0_0_10px_rgba(0,0,0,1)]">Cantas en: <span id="instrumental-countdown" class="text-cyan-300">3</span>s</span>
+                </div>
+
+                <div id="current-lyric" class="lyric-line lyric-active transition-opacity duration-500"></div>
+                
+                <div id="tracking-line-container" class="tracking-bar transition-opacity duration-500">
                     <div id="tracking-line-fill" class="tracking-fill">
                         <div class="tracking-head"></div>
                     </div>
                 </div>
             </div>
 
-            <div id="next-lyric" class="lyric-line lyric-next"></div>
+            <!-- Verso Siguiente -->
+            <div id="next-lyric-container" class="w-full flex-1 flex items-start justify-center pt-4 md:pt-8 opacity-100 transition-opacity duration-500">
+                <span id="next-lyric" class="lyric-next px-4 overflow-hidden text-ellipsis whitespace-nowrap w-full text-center"></span>
+            </div>
         </div>
 
         <div id="controls-panel" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass-panel rounded-2xl p-2 flex items-center gap-2 md:gap-3 z-20 border-t border-white/5">
@@ -544,7 +561,7 @@
                 DOM.comboDisplay.innerText = `COMBO x1`;
                 DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-400 bg-slate-800 border border-slate-600 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-all duration-300 combo-broken";
                 setTimeout(() => { DOM.comboDisplay.classList.remove('combo-broken'); }, 400);
-                if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡COMBO ROTO!", "#ef4444");
+                if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡FALLO!", "#ef4444");
             }
         }
 
@@ -558,22 +575,18 @@
             let newIndex = lrcData.findIndex(line => line.time > currentTime) - 1;
             if (newIndex === -2) newIndex = lrcData.length - 1; 
 
-            // AL CAMBIAR DE LÍNEA: Evaluar Rendimiento
+            // CAMBIO DE LÍNEA: Evaluar Rendimiento y Actualizar Textos
             if (newIndex !== currentLineIndex) {
                 if (currentLineIndex >= 0) {
-                    DOM.prevLyricText.innerText = lrcData[currentLineIndex].text;
-                    
                     const prevLine = lrcData[currentLineIndex];
                     const hitRatio = wordsSaidInLine.size / prevLine.words.length;
                     
-                    // Mantiene el combo si cantó más del 50% de la frase
                     if (wordsSaidInLine.size > 0 && hitRatio >= 0.5) {
                         if(!isTvModeActive && !isBlindModeActive) createFloatingTextSmall("¡VERSO OK!", "#4ade80");
                     } else if (prevLine.words.length > 0) {
                         breakCombo();
                     }
                     
-                    // Marcar en gris las palabras que no atinó
                     cachedSpans.forEach(span => {
                         if (!span.classList.contains('hit-word')) {
                             span.style.opacity = '0.25';
@@ -586,7 +599,9 @@
                 wordsSaidInLine.clear(); 
                 currentActiveWordIndex = 0;
                 
+                // Actualizar Textos Superior, Central e Inferior
                 if (currentLineIndex >= 0) {
+                    DOM.prevLyricText.innerText = currentLineIndex > 0 ? lrcData[currentLineIndex - 1].text : "";
                     renderLine(lrcData[currentLineIndex]);
                     DOM.nextLyric.innerText = lrcData[currentLineIndex + 1] ? lrcData[currentLineIndex + 1].text : "";
                 }
@@ -600,7 +615,7 @@
                 const timeSinceLineStart = currentTime - currentLine.time;
                 const timeToNextLine = nextLine.time - currentTime;
 
-                // Lógica de Silencio Intermedio Inteligente
+                // LÓGICA DE TIEMPOS MUERTOS (Mejorada para Layout Central)
                 if (timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 4.0) {
                     DOM.instrumentalTimer.classList.remove('opacity-0');
                     DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
@@ -610,18 +625,25 @@
                     let visualPct = Math.max(0, Math.min((elapsedSilence / totalSilenceDuration) * 100, 100));
                     DOM.instFill.style.width = `${visualPct}%`;
                     
+                    // Atenuar letras pero dejarlas visibles
+                    DOM.currentLyric.style.opacity = '0.2';
+                    DOM.prevLyricText.style.opacity = '0';
+                    DOM.nextLyric.style.opacity = '0';
                     DOM.trackingContainer.style.opacity = '0'; 
                 } else {
                     DOM.instrumentalTimer.classList.add('opacity-0');
+                    DOM.currentLyric.style.opacity = '1';
+                    DOM.prevLyricText.style.opacity = '1';
+                    DOM.nextLyric.style.opacity = '1';
                     DOM.trackingContainer.style.opacity = '1'; 
                 }
 
-                // Barra de llenado dinámica
+                // BARRA DE PROGRESO 
                 let progress = 0;
                 if(timeSinceLineStart <= estimatedSingingDuration) {
                     progress = Math.max(0, Math.min(timeSinceLineStart / estimatedSingingDuration, 1));
                 } else {
-                    progress = 1; // Mantiene la barra llena si ya acabó de cantar
+                    progress = 1; 
                 }
                 
                 if(cachedSpans.length > 0) {
@@ -670,8 +692,10 @@
                     let visualPct = Math.max(0, Math.min(((lrcData[0].time - timeToNextLine) / lrcData[0].time) * 100, 100));
                     DOM.instFill.style.width = `${visualPct}%`;
                     DOM.trackingContainer.style.opacity = '0';
+                    DOM.currentLyric.style.opacity = '0';
                 } else {
                     DOM.instrumentalTimer.classList.add('opacity-0');
+                    DOM.currentLyric.style.opacity = '1';
                 }
             } else { 
                 DOM.instrumentalTimer.classList.add('opacity-0');
@@ -690,7 +714,7 @@
             
             const randomX = Math.random() * 60 - 30; 
             el.style.left = `calc(50% + ${randomX}px)`; 
-            el.style.top = `40%`;
+            el.style.top = `35%`;
             DOM.karaokeScreen.appendChild(el); 
             setTimeout(() => el.remove(), 1000);
         }
@@ -707,12 +731,12 @@
             recognition.lang = 'es-MX'; 
             recognition.continuous = true; 
             recognition.interimResults = true;
-            recognition.maxAlternatives = 1; // 1 sola alternativa para Zero-Lag
+            recognition.maxAlternatives = 1; 
 
             recognition.onstart = () => { isRecognizing = true; };
 
             recognition.onerror = (event) => {
-                console.warn("Monitor de Micrófono:", event.error);
+                console.warn("Micrófono:", event.error);
                 if (event.error === 'not-allowed' || event.error === 'audio-capture') {
                     isRecognizing = false; 
                 }
@@ -721,90 +745,81 @@
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // 1. ARQUITECTURA ZERO-LAG: Extraer SOLO las palabras que acaban de cambiar/ingresar en este milisegundo (event.resultIndex)
+                // Capturar el audio reciente
                 let newTranscript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     newTranscript += event.results[i][0].transcript + " ";
                 }
                 
-                // Convertir la pequeña cadena nueva en un array ágil y limpio
                 let spokenWords = normalize(newTranscript).split(/\s+/).filter(w => w.length > 0);
                 if (spokenWords.length === 0) return;
                 
-                // Actualizar Monitor Visual de Debug
                 if (isTranscriptVisible) {
-                    DOM.liveTranscript.innerText = spokenWords.join(" ") || "Escuchando...";
+                    DOM.liveTranscript.innerText = spokenWords.slice(-5).join(" ") || "Escuchando...";
                 }
                 
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 
-                // Evaluar las palabras objetivo
-                for (let tIndex = 0; tIndex < targetWordsRaw.length; tIndex++) {
+                // LA VENTANA DESLIZANTE ESTRICTA
+                // Solo permitimos hacer "Match" a palabras que estén justo en la barra dorada (+/- 2 palabras)
+                let windowStart = Math.max(0, currentActiveWordIndex - 2); 
+                let windowEnd = Math.min(targetWordsRaw.length - 1, currentActiveWordIndex + 2); 
+
+                for (let tIndex = windowStart; tIndex <= windowEnd; tIndex++) {
                     if (wordsSaidInLine.has(tIndex)) continue; 
-                    
-                    // Bloqueo de Futuro: Permitimos máximo 2 palabras adelantadas al canto
-                    if (tIndex > currentActiveWordIndex + 2) continue; 
                     
                     const cleanTarget = normalize(targetWordsRaw[tIndex]);
                     let matchedSpokenIndex = -1;
-                    let consumedCount = 1; // Para borrar palabras rotas
 
-                    // A) FAST-PATH: Coincidencia Exacta e Inmediata (0 matemáticas)
+                    // 1. Fast-Path (Exacto)
                     matchedSpokenIndex = spokenWords.findIndex(sw => sw === cleanTarget);
 
-                    // B) Diccionario Fonético Dinámico (Ah, Oh, Yeah, Ay)
+                    // 2. Diccionario Fonético
                     if (matchedSpokenIndex === -1 && cleanTarget.length <= 4) {
-                         const phonetics = {"ay": "^(ai|ahi|hay|aay|i)$", "oh": "^(o|ho|ooh)$", "eh": "^(e|he)$", "ah": "^(a|ha)$", "y": "^(i|e)$", "yeah": "^(iea|ya|ie|yea|yeh|ea)$"};
+                         const phonetics = {"ay": "^(ai|ahi|hay|aay|i)$", "oh": "^(o|ho|ooh|u)$", "eh": "^(e|he)$", "ah": "^(a|ha)$", "y": "^(i|e)$", "yeah": "^(iea|ya|ie|yea|yeh|ea|ia)$"};
                          if (phonetics[cleanTarget]) {
                              const regexPhon = new RegExp(phonetics[cleanTarget]);
                              matchedSpokenIndex = spokenWords.findIndex(sw => regexPhon.test(sw));
                          }
                     }
 
-                    // C) Comparación Compleja (Levenshtein y Fusión de Sílabas Rotas)
+                    // 3. Tolerancia y Fusión
                     if (matchedSpokenIndex === -1 && cleanTarget.length >= 3) {
-                        let requiredSim = cleanTarget.length <= 4 ? 0.50 : 0.60; // Justo para palabras cortas
+                        let requiredSim = cleanTarget.length <= 4 ? 0.50 : 0.60;
                         
                         for(let i = 0; i < spokenWords.length; i++) {
                             let sWord = spokenWords[i];
-                            
-                            // Saltar micro-sílabas que ahogan el procesador
                             if(sWord.length < 2 && cleanTarget.length > 3) continue;
 
                             if (Math.abs(sWord.length - cleanTarget.length) <= 3 && getSimilarity(cleanTarget, sWord) >= requiredSim) {
                                 matchedSpokenIndex = i; break;
                             }
                             
-                            // Fusión Mágica: Unir piezas si Chrome rompió la palabra (ej: "co" + "razon")
+                            // Unir palabras rotas por Chrome ("Co" + "razon")
                             if(i < spokenWords.length - 1) {
                                 let combined = sWord + spokenWords[i+1];
                                 if (Math.abs(combined.length - cleanTarget.length) <= 3 && getSimilarity(cleanTarget, combined) >= requiredSim) {
-                                    matchedSpokenIndex = i; 
-                                    consumedCount = 2; // Borramos ambas partes del array
-                                    break; 
+                                    matchedSpokenIndex = i; break; 
                                 }
                             }
                         }
                     }
 
-                    // Procesar el acierto inmediatamente
+                    // Procesar el acierto
                     if (matchedSpokenIndex !== -1) {
                         processHit(tIndex);
-                        // Borramos la palabra procesada para no volver a evaluarla
-                        spokenWords.splice(matchedSpokenIndex, consumedCount);
+                        break; // Rompemos para que 1 palabra hablada no active múltiples palabras de la letra a la vez
                     }
                 }
             };
             
-            // Inmortalidad del Micrófono (Resurrección Automática Segura)
+            // Resurrección Automática Segura
             recognition.onend = () => { 
                 isRecognizing = false;
                 if (!DOM.karaokeScreen.classList.contains('hidden') && !isPaused) {
                     clearTimeout(recognitionRestartTimeout);
                     recognitionRestartTimeout = setTimeout(() => { 
-                        if(!isRecognizing) {
-                            try { recognition.start(); } catch(e){} 
-                        }
+                        if(!isRecognizing) { try { recognition.start(); } catch(e){} }
                     }, 150);
                 }
             };
