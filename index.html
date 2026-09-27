@@ -58,7 +58,7 @@
             display: flex; flex-wrap: wrap; justify-content: center; 
             line-height: 1.4;
             filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.95));
-            gap: 0.6rem 1.4rem;
+            gap: 0.8rem 1.6rem;
         }
 
         .lyric-active span {
@@ -68,7 +68,7 @@
             -webkit-text-fill-color: transparent;
             padding: 0.2rem 0;
             will-change: transform, filter;
-            transition: transform 0.1s ease-out; 
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); 
         }
 
         .lyric-next {
@@ -81,32 +81,17 @@
             margin-bottom: 3vh; display: flex; align-items: center; justify-content: center; gap: 1rem;
         }
 
-        /* ANIMACIÓN DE ACIERTO TIPO ARCADE (Salto y Neón) */
+        /* ANIMACIÓN DE ACIERTO TIPO ARCADE */
         @keyframes arcadeHit {
             0% { transform: scale(1.06) translateY(0); filter: drop-shadow(0 0 0px rgba(74, 222, 128, 0)); }
-            30% { transform: scale(1.15) translateY(-8px) rotate(-2deg); filter: drop-shadow(0 0 30px rgba(74, 222, 128, 1)); color: #4ade80; }
-            100% { transform: scale(1.06) translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.6)); color: #4ade80; }
+            30% { transform: scale(1.2) translateY(-10px) rotate(-2deg); filter: drop-shadow(0 0 35px rgba(74, 222, 128, 1)); color: #4ade80; }
+            100% { transform: scale(1.06) translateY(0) rotate(0deg); filter: drop-shadow(0 0 20px rgba(74, 222, 128, 0.6)); color: #4ade80; }
         }
         
         .hit-word {
             animation: arcadeHit 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
             background: #4ade80 !important; 
             -webkit-background-clip: text !important;
-        }
-
-        .badge {
-            font-size: clamp(0.8rem, 1.5vw, 1.1rem);
-            padding: 0.4rem 1.2rem; border-radius: 999px; font-weight: 900;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            letter-spacing: 2px; border: 1px solid rgba(255,255,255,0.2);
-        }
-        .badge-perfect { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #451a03; box-shadow: 0 0 30px rgba(251,191,36,0.5); }
-        .badge-good { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #082f49; box-shadow: 0 0 30px rgba(14,165,233,0.5); }
-
-        @keyframes popIn { 
-            0% { transform: scale(0.8) translateY(10px); opacity: 0; } 
-            100% { transform: scale(1) translateY(0); opacity: 1; } 
         }
 
         #youtube-player-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; }
@@ -132,7 +117,6 @@
             box-shadow: 0 0 15px white, 0 0 30px #fbbf24;
         }
 
-        /* Textos flotantes pequeños (Acierto por Palabra) */
         .floating-text-small {
             position: absolute; font-weight: 800; font-size: clamp(1rem, 2.5vw, 2rem);
             color: #4ade80; text-shadow: 0 0 15px rgba(74,222,128, 0.6), 0 2px 4px rgba(0,0,0,0.8);
@@ -148,6 +132,8 @@
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
         ::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.3); border-radius: 4px; }
 
+        /* Panel de monitoreo de voz */
+        #transcript-panel { transition: all 0.3s ease; }
     </style>
 </head>
 <body class="flex items-center justify-center h-screen w-screen p-4 md:p-8 box-border selection:bg-yellow-500/30">
@@ -169,7 +155,6 @@
         </div>
         
         <div class="space-y-5">
-            <!-- Link YT -->
             <div class="group">
                 <label class="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wider">
                     <i class="fab fa-youtube mr-1 text-red-500"></i> Link de la Pista (YouTube)
@@ -177,7 +162,6 @@
                 <input type="text" id="youtube-url" class="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/30 transition-all text-sm shadow-inner placeholder-slate-600" placeholder="Pega el enlace aquí...">
             </div>
 
-            <!-- Búsqueda Letra -->
             <div class="group">
                 <label class="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wider">
                     <i class="fas fa-music mr-1 text-blue-400"></i> Búsqueda de Letra Manual (Opcional)
@@ -185,15 +169,15 @@
                 <input type="text" id="manual-query" class="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/30 transition-all text-sm shadow-inner placeholder-slate-600" placeholder="Ej: Luis Miguel - La Incondicional">
             </div>
 
-            <!-- Modo TV (Vista Limpia) -->
+            <!-- Modo TV -->
             <div class="mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-700/40 hover:bg-slate-800/60 transition-colors cursor-pointer group flex items-center" onclick="document.getElementById('tv-mode-toggle').click()">
                 <div class="relative flex items-center justify-center">
                     <input type="checkbox" id="tv-mode-toggle" class="peer sr-only">
                     <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
                 </div>
                 <div class="ml-4">
-                    <span class="text-white font-bold text-sm flex items-center gap-2">Modo TV (Vista Limpia) <span class="bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest">Para Proyector</span></span>
-                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta los puntos y combos de la pantalla. Seguirá calificando en secreto.</span>
+                    <span class="text-white font-bold text-sm flex items-center gap-2">Modo TV (Vista Limpia) <span class="bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest">Recomendado</span></span>
+                    <span class="text-[11px] text-slate-400 block mt-0.5">Oculta los puntos de la pantalla. Seguirá calificando en secreto.</span>
                 </div>
             </div>
             
@@ -216,7 +200,7 @@
         <div id="youtube-player-container"></div>
         <div class="overlay"></div>
 
-        <!-- HUD: Puntuación (smooth-hide para modo Ciego/TV) -->
+        <!-- HUD: Puntuación -->
         <div id="hud-panel" class="absolute top-6 right-6 md:top-8 md:right-8 text-right z-20 smooth-hide">
             <div class="text-5xl md:text-7xl font-black text-white drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] tracking-tighter" id="score-display">0</div>
             <div class="text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-colors duration-300" id="combo-display">COMBO x1</div>
@@ -233,16 +217,22 @@
             <div id="countdown-number" class="text-[15rem] font-black text-white drop-shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse">3</div>
         </div>
 
+        <!-- Panel de Monitoreo de Voz (Oculto por defecto) -->
+        <div id="transcript-panel" class="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/70 border border-slate-600/50 rounded-xl p-4 w-11/12 max-w-xl hidden z-40 text-center backdrop-blur-md shadow-2xl">
+            <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest block mb-2"><i class="fas fa-satellite-dish animate-pulse"></i> Señal del Micrófono en Vivo</span>
+            <div id="live-transcript" class="text-white/80 font-mono text-sm h-12 overflow-y-auto flex items-center justify-center italic">Esperando audio...</div>
+        </div>
+
         <!-- Contenedor Central de Letras -->
         <div id="lyrics-container" class="text-center w-[95%] md:w-4/5 z-10 mt-8 smooth-hide relative">
             
             <!-- INDICADOR DE TIEMPOS MUERTOS (INSTRUMENTAL) -->
-            <div id="instrumental-timer" class="absolute -top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0 transition-opacity duration-500 w-full max-w-xs pointer-events-none">
+            <div id="instrumental-timer" class="absolute -top-24 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0 transition-opacity duration-500 w-full max-w-xs pointer-events-none">
                 <span class="text-cyan-400 font-bold uppercase tracking-widest text-[10px] mb-1"><i class="fas fa-headphones-alt"></i> Intermedio Musical</span>
                 <div class="w-full h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
-                    <div id="instrumental-fill" class="absolute top-0 right-0 h-full bg-gradient-to-l from-cyan-400 to-blue-600 shadow-[0_0_15px_#22d3ee] w-full transition-all duration-100 ease-linear"></div>
+                    <div id="instrumental-fill" class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_15px_#22d3ee] w-0 transition-all duration-100 ease-linear"></div>
                 </div>
-                <span class="text-white font-black text-xl mt-1 drop-shadow-md">Entra en: <span id="instrumental-countdown" class="text-cyan-300">3</span>s</span>
+                <span class="text-white font-black text-xl mt-1 drop-shadow-md">Cantas en: <span id="instrumental-countdown" class="text-cyan-300">3</span>s</span>
             </div>
 
             <div id="prev-lyric-container" class="lyric-prev">
@@ -250,7 +240,6 @@
             </div>
             
             <div class="relative flex flex-col items-center justify-center w-full">
-                <!-- AQUI VAN LAS PALABRAS -->
                 <div id="current-lyric" class="lyric-line lyric-active"></div>
                 
                 <!-- BARRA INFERIOR FLUIDA -->
@@ -269,6 +258,11 @@
             <!-- BOTÓN MODO CIEGO (EL OJO) -->
             <button id="btn-blind-mode" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-purple-400 transition flex items-center justify-center shrink-0 ml-1" title="Modo Reto Ciego (Ocultar Letra y Puntos)">
                 <i class="fas fa-eye"></i>
+            </button>
+            
+            <!-- BOTÓN MONITOREO DE VOZ -->
+            <button id="btn-transcript-toggle" class="w-10 h-10 bg-slate-800/50 hover:bg-slate-700 rounded-xl text-green-400 transition flex items-center justify-center shrink-0" title="Ver qué escucha el Micrófono">
+                <i class="fas fa-microphone-alt"></i>
             </button>
 
             <button id="btn-pause" class="w-12 h-12 bg-yellow-500/90 hover:bg-yellow-400 rounded-xl text-slate-900 text-lg font-black transition shadow-[0_0_15px_rgba(251,191,36,0.3)] flex items-center justify-center mx-2">
@@ -335,9 +329,9 @@
         let animationFrameId;
         let isPaused = false;
         
-        // Modos Especiales
         let isTvModeActive = false;
         let isBlindModeActive = false; 
+        let isTranscriptVisible = false;
         
         let score = 0; let combo = 1; let maxCombo = 1;
         let wordsSaidInLine = new Set();
@@ -366,7 +360,9 @@
             lyricsContainer: document.getElementById('lyrics-container'),
             instrumentalTimer: document.getElementById('instrumental-timer'),
             instCountdown: document.getElementById('instrumental-countdown'),
-            instFill: document.getElementById('instrumental-fill')
+            instFill: document.getElementById('instrumental-fill'),
+            transcriptPanel: document.getElementById('transcript-panel'),
+            liveTranscript: document.getElementById('live-transcript')
         };
 
         // UTILIDADES MATEMÁTICAS / STRING
@@ -468,7 +464,6 @@
                 
                 if (lrcData.length === 0) throw new Error("La letra no está sincronizada.");
                 
-                // Contar total de palabras para la pantalla de resultados
                 totalWordsInSong = lrcData.reduce((acc, line) => acc + line.words.length, 0);
 
                 document.getElementById('loading-text').innerText = "Montando Escenario...";
@@ -508,7 +503,7 @@
             DOM.comboDisplay.className = "text-[10px] md:text-xs font-black text-slate-900 bg-yellow-400 mt-1 uppercase tracking-[0.2em] inline-block px-3 py-1 rounded-full transition-colors duration-300";
             updateSyncDisplay();
             
-            DOM.currentLyric.innerHTML = "<span style='color:#fbbf24'>Preparando</span> <span style='color:#fbbf24'>Micrófonos...</span>";
+            DOM.currentLyric.innerHTML = "<span style='color:#fbbf24; transform: scale(1.06)'>Preparando</span> <span style='color:#fbbf24; transform: scale(1.06)'>Micrófonos...</span>";
             DOM.nextLyric.innerText = ""; DOM.prevLyricText.innerText = "";
             cachedSpans = []; DOM.trackingContainer.classList.add('opacity-0');
             DOM.instrumentalTimer.classList.add('opacity-0');
@@ -560,33 +555,6 @@
 
             const currentTime = player.getCurrentTime() + syncOffset;
             
-            // Lógica del Indicador de Tiempo Muerto (Instrumental)
-            let nextValidIndex = currentLineIndex + 1;
-            let timeToNext = 0;
-            if (nextValidIndex < lrcData.length) {
-                timeToNext = lrcData[nextValidIndex].time - currentTime;
-                
-                if (timeToNext > 4.0) { 
-                    DOM.instrumentalTimer.classList.remove('opacity-0');
-                    DOM.instCountdown.innerText = Math.ceil(timeToNext);
-                    
-                    let visualPct = Math.max(0, Math.min((timeToNext / 10.0) * 100, 100));
-                    DOM.instFill.style.width = `${visualPct}%`;
-                    
-                    // Aseguramos que la letra se mantenga visible y brillante
-                    DOM.currentLyric.style.opacity = '1';
-                    // Ocultamos la barra de seguimiento porque es tiempo de descanso
-                    DOM.trackingContainer.style.opacity = '0';
-                } else {
-                    DOM.instrumentalTimer.classList.add('opacity-0');
-                    DOM.currentLyric.style.opacity = '1';
-                    DOM.trackingContainer.style.opacity = '1';
-                }
-            } else {
-                DOM.instrumentalTimer.classList.add('opacity-0');
-            }
-
-            // Lógica de avance de líneas
             let newIndex = lrcData.findIndex(line => line.time > currentTime) - 1;
             if (newIndex === -2) newIndex = lrcData.length - 1; 
 
@@ -597,6 +565,7 @@
                 currentLineIndex = newIndex; 
                 wordsSaidInLine.clear(); 
                 currentMicrophoneTranscript = ""; 
+                DOM.liveTranscript.innerText = "Escuchando...";
                 currentActiveWordIndex = 0;
                 
                 if (currentLineIndex >= 0) {
@@ -605,13 +574,36 @@
                 }
             }
 
-            // Iluminado Fluido de la línea actual
             if (currentLineIndex >= 0 && lrcData[currentLineIndex + 1]) {
-                const startTime = lrcData[currentLineIndex].time; 
-                const endTime = lrcData[currentLineIndex + 1].time;
-                const duration = endTime - startTime; 
-                const elapsed = currentTime - startTime;
-                const progress = Math.max(0, Math.min(elapsed / duration, 1));
+                const currentLine = lrcData[currentLineIndex];
+                const nextLine = lrcData[currentLineIndex + 1];
+                
+                // Lógica de cálculo matemático del "Tiempo de Canto Estimado"
+                const maxGapToNext = nextLine.time - currentLine.time;
+                // Calculamos 0.4s por palabra + 1.5s base, sin exceder el inicio de la siguiente línea
+                const estimatedSingingDuration = Math.min(maxGapToNext, currentLine.words.length * 0.4 + 1.5);
+                
+                const timeSinceLineStart = currentTime - currentLine.time;
+                const timeToNextLine = nextLine.time - currentTime;
+
+                // Si ya pasamos la parte de cantar Y el silencio es de más de 4s
+                if (timeSinceLineStart > estimatedSingingDuration && timeToNextLine > 4.0) {
+                    DOM.instrumentalTimer.classList.remove('opacity-0');
+                    DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
+                    
+                    const totalSilenceDuration = nextLine.time - (currentLine.time + estimatedSingingDuration);
+                    const elapsedSilence = totalSilenceDuration - timeToNextLine;
+                    let visualPct = Math.max(0, Math.min((elapsedSilence / totalSilenceDuration) * 100, 100));
+                    DOM.instFill.style.width = `${visualPct}%`;
+                    
+                    DOM.trackingContainer.style.opacity = '0'; // Ocultar línea fluida temporalmente
+                } else {
+                    DOM.instrumentalTimer.classList.add('opacity-0');
+                    DOM.trackingContainer.style.opacity = '1'; // Mostrar línea fluida
+                }
+
+                // Dibujar línea de progreso (Usando el tiempo estimado de canto real)
+                const progress = Math.max(0, Math.min(timeSinceLineStart / estimatedSingingDuration, 1));
                 
                 if(cachedSpans.length > 0) {
                     const exactProgress = progress * cachedSpans.length;
@@ -619,7 +611,7 @@
                     
                     for(let i=0; i < cachedSpans.length; i++) {
                         let span = cachedSpans[i];
-                        if (span.classList.contains('hit-word')) continue;
+                        if (span.classList.contains('hit-word')) continue; 
                         
                         let targetBaseColor = '#fbbf24'; 
                         
@@ -646,12 +638,26 @@
                     }
                 }
                 
-                // Mostrar barra inferior si no estamos en descanso
                 if (DOM.trackingContainer.style.opacity !== '0') {
                     DOM.trackingContainer.classList.remove('opacity-0');
                     DOM.trackingFill.style.width = `${progress * 100}%`;
                 }
+
+            } else if (currentLineIndex === -1 && lrcData.length > 0) {
+                // Tiempos Muertos de Introducción (Inicio de la pista)
+                let timeToNextLine = lrcData[0].time - currentTime;
+                if (timeToNextLine > 4.0) {
+                    DOM.instrumentalTimer.classList.remove('opacity-0');
+                    DOM.instCountdown.innerText = Math.ceil(timeToNextLine);
+                    let elapsedSilence = lrcData[0].time - timeToNextLine;
+                    let visualPct = Math.max(0, Math.min((elapsedSilence / lrcData[0].time) * 100, 100));
+                    DOM.instFill.style.width = `${visualPct}%`;
+                    DOM.trackingContainer.style.opacity = '0';
+                } else {
+                    DOM.instrumentalTimer.classList.add('opacity-0');
+                }
             } else { 
+                DOM.instrumentalTimer.classList.add('opacity-0');
                 DOM.trackingContainer.classList.add('opacity-0'); 
             }
 
@@ -677,15 +683,14 @@
             if (!SpeechRecognition) return;
             
             recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX'; // Mejora de detección de acento
+            recognition.lang = 'es-MX'; 
             recognition.continuous = true; 
             recognition.interimResults = true;
-            recognition.maxAlternatives = 3; // Permite adivinar entre 3 posibles frases (Mejora radical)
+            recognition.maxAlternatives = 3; 
 
             recognition.onresult = (event) => {
                 if (currentLineIndex < 0 || isPaused) return;
 
-                // Concatenamos TODAS las posibilidades de Chrome para máxima detección
                 let latestTranscript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     for(let j = 0; j < event.results[i].length; j++) {
@@ -693,14 +698,21 @@
                     }
                 }
                 
-                // Añadimos a la super-cadena
                 currentMicrophoneTranscript += " " + normalize(latestTranscript);
+                
+                // Actualizar panel de monitoreo visual
+                if (isTranscriptVisible) {
+                    DOM.liveTranscript.innerText = currentMicrophoneTranscript.trim() || "Escuchando...";
+                    DOM.liveTranscript.scrollTop = DOM.liveTranscript.scrollHeight;
+                }
                 
                 const targetWordsRaw = lrcData[currentLineIndex].words;
                 
                 targetWordsRaw.forEach((tWord, tIndex) => {
                     if (wordsSaidInLine.has(tIndex)) return; 
-                    if (tIndex > currentActiveWordIndex + 1) return; // Bloquea palabras del futuro
+                    
+                    // Candado de Futuro: Solo compara hasta 1 palabra adelante
+                    if (tIndex > currentActiveWordIndex + 1) return; 
                     
                     const cleanTarget = normalize(tWord);
                     if (cleanTarget.length < 2) {
@@ -711,14 +723,13 @@
                     let foundMatch = false;
                     let targetToConsume = "";
 
-                    // Fast-path: Acierto Exacto
                     if (currentMicrophoneTranscript.includes(cleanTarget)) {
                         foundMatch = true;
                         targetToConsume = cleanTarget;
                     } else {
-                        // Slow-path: Matemáticas y Tolerancia al ruido (Ajustado al 70%)
                         const wordsInTranscript = currentMicrophoneTranscript.split(/\s+/).filter(w => w.length > 2);
                         for(let sWord of wordsInTranscript) {
+                            // Criterio estricto de precisión: 70% de similitud
                             if (getSimilarity(cleanTarget, sWord) >= 0.70) {
                                 foundMatch = true; 
                                 targetToConsume = sWord;
@@ -729,7 +740,7 @@
 
                     if (foundMatch) {
                         processHit(tIndex);
-                        // Consumir (borrar) la palabra para no reutilizarla
+                        // Consumir la palabra para evitar el bug de pre-iluminación (Bug de predicción)
                         currentMicrophoneTranscript = currentMicrophoneTranscript.replace(targetToConsume, "");
                     }
                 });
@@ -752,7 +763,6 @@
                 cachedSpans[tIndex].classList.add('hit-word');
                 cachedSpans[tIndex].dataset.state = 'hit';
 
-                // Puntuación Inmediata por Palabra Exacta
                 combo++;
                 if(combo > maxCombo) maxCombo = combo;
                 
@@ -771,7 +781,6 @@
             }
         }
 
-        // CONTROL: MODO CIEGO (OJO)
         document.getElementById('btn-blind-mode').addEventListener('click', function() {
             isBlindModeActive = !isBlindModeActive;
             const icon = this.querySelector('i');
@@ -784,6 +793,18 @@
                 icon.className = 'fas fa-eye text-purple-400';
                 DOM.lyricsContainer.classList.remove('opacity-0');
                 if(!isTvModeActive) DOM.hudPanel.classList.remove('opacity-0');
+            }
+        });
+
+        // Toggle del Monitor de Voz
+        document.getElementById('btn-transcript-toggle').addEventListener('click', function() {
+            isTranscriptVisible = !isTranscriptVisible;
+            if(isTranscriptVisible) {
+                this.classList.replace('text-green-400', 'text-red-400');
+                DOM.transcriptPanel.classList.remove('hidden');
+            } else {
+                this.classList.replace('text-red-400', 'text-green-400');
+                DOM.transcriptPanel.classList.add('hidden');
             }
         });
 
